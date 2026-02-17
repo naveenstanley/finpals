@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Finpal · Underwriter Workstation</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Sans+Condensed:wght@600;700&display=swap" rel="stylesheet"/>
+<style>
+/* ═══════════════════════════════════════════════
+   TOKENS
+═══════════════════════════════════════════════ */
+:root {
+  --bg:       #f4f3f0;
+  --canvas:   #eceae5;
+  --white:    #ffffff;
+  --panel:    #fafaf8;
+  --border:   #dddbd5;
+  --border2:  #e8e6e0;
+  --ink:      #1a1916;
+  --ink2:     #3d3b36;
+  --muted:    #7a7870;
+  --faint:    #b0ae a8;
+
+  --green:    #1a7a4a;
+  --green-bg: #edf7f2;
+  --green-bd: #b3dfc8;
+
+  --amber:    #8a5c00;
+  --amber-bg: #fdf5e6;
+  --amber-bd: #f0d08a;
+
+  --red:      #b91c3a;
+  --red-bg:   #fef0f3;
+  --red-bd:   #f5b8c4;
+
+  --blue:     #1251a3;
+  --blue-bg:  #eff4fd;
+  --blue-bd:  #b3caf5;
+
+  --orange:   #c45a00;
+
+  --accent:   #1a7a4a;
+  --r:        6px;
+  --r-lg:     10px;
+}
+
+/* ═══════════════════════════════════════════════
+   RESET
+═══════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: 'IBM Plex Sans', sans-serif;
+  background: var(--canvas);
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.5;
+}
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ═══════════════════════════════════════════════
+   LAYOUT
+═══════════════════════════════════════════════ */
+.shell {
+  display: grid;
+  grid-template-rows: 44px 1fr;
+  grid-template-columns: 260px 1fr 320px;
+  grid-template-areas:
+    "topbar topbar topbar"
+    "queue  main   ai";
+  height: 100vh;
+}
+
+/* ═══════════════════════════════════════════════
+   TOPBAR
+═══════════════════════════════════════════════ */
+.topbar {
+  grid-area: topbar;
+  background: var(--ink);
+  display: flex; align-items: center;
+  padding: 0 16px; gap: 0;
+  border-bottom: 1px solid #2e2c28;
+}
+.tb-logo {
+  font-family: 'IBM Plex Sans Condensed', sans-serif;
+  font-weight: 700; font-size: 15px; color: #fff;
+  letter-spacing: .01em; padding-right: 20px;
+  border-right: 1px solid #2e2c28; margin-right: 20px;
+}
+.tb-logo span { color: #4eca84; }
+.tb-nav-item {
+  font-size: 12px; color: #9a9890; padding: 0 14px; height: 44px;
+  display: flex; align-items: center; cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color .15s;
+}
+.tb-nav-item.active { color: #fff; border-bottom-color: #4eca84; }
+.tb-nav-item:hover:not(.active) { color: #ccc; }
+.tb-spacer { flex: 1; }
+.tb-badge {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px; padding: 3px 10px;
+  background: rgba(78,202,132,.15); color: #4eca84;
+  border: 1px solid rgba(78,202,132,.3); border-radius: 3px;
+  margin-right: 14px;
+}
+.tb-user {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; color: #9a9890;
+}
+.tb-avatar {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: #2e6b4a; display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 600; color: #4eca84;
+}
+
+/* ═══════════════════════════════════════════════
+   QUEUE (left)
+═══════════════════════════════════════════════ */
+.queue {
+  grid-area: queue;
+  background: var(--white);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.queue-header {
+  padding: 12px 14px 10px;
+  border-bottom: 1px solid var(--border2);
+  flex-shrink: 0;
+}
+.queue-title {
+  font-family: 'IBM Plex Sans Condensed', sans-serif;
+  font-weight: 700; font-size: 11px;
+  text-transform: uppercase; letter-spacing: .08em; color: var(--muted);
+  margin-bottom: 8px;
+}
+.queue-filters {
+  display: flex; gap: 4px; flex-wrap: wrap;
+}
+.q-filter {
+  font-size: 11px; padding: 3px 9px; border-radius: 3px;
+  border: 1px solid var(--border); background: transparent;
+  color: var(--muted); cursor: pointer; transition: all .12s;
+  font-family: 'IBM Plex Sans', sans-serif;
+}
+.q-filter.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+.q-filter:hover:not(.on) { background: var(--canvas); }
+
+.queue-list { overflow-y: auto; flex: 1; }
+.q-item {
+  padding: 11px 14px; cursor: pointer;
+  border-bottom: 1px solid var(--border2);
+  transition: background .12s;
+  position: relative;
+}
+.q-item:hover { background: var(--canvas); }
+.q-item.selected { background: #edf7f2; border-left: 3px solid var(--green); }
+.q-item.selected .q-ref { color: var(--green); }
+.q-item-top {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: 4px;
+}
+.q-name {
+  font-weight: 600; font-size: 12.5px; color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: 140px;
+}
+.q-amount {
+  font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+  color: var(--ink2); flex-shrink: 0;
+}
+.q-item-mid {
+  display: flex; justify-content: space-between;
+  margin-bottom: 5px;
+}
+.q-ref {
+  font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted);
+}
+.q-type { font-size: 10px; color: var(--muted); }
+.q-item-bot { display: flex; justify-content: space-between; align-items: center; }
+
+.q-score-wrap { display: flex; align-items: center; gap: 5px; }
+.q-score-bar {
+  width: 52px; height: 4px; background: var(--border);
+  border-radius: 2px; overflow: hidden;
+}
+.q-score-fill { height: 100%; border-radius: 2px; }
+.q-score-num {
+  font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--ink2);
+}
+
+.q-status {
+  font-size: 10px; padding: 2px 7px; border-radius: 3px;
+  font-family: 'IBM Plex Mono', monospace;
+}
+.qs-approve { background: var(--green-bg); color: var(--green); }
+.qs-refer   { background: var(--amber-bg); color: var(--amber); }
+.qs-decline { background: var(--red-bg);   color: var(--red);   }
+.qs-pending { background: var(--blue-bg);  color: var(--blue);  }
+
+.q-flag {
+  position: absolute; top: 10px; right: 10px;
+  width: 7px; height: 7px; border-radius: 50%;
+}
+.flag-fraud { background: var(--red); }
+.flag-docs  { background: var(--amber); }
+
+/* ═══════════════════════════════════════════════
+   MAIN PANEL
+═══════════════════════════════════════════════ */
+.main {
+  grid-area: main;
+  background: var(--bg);
+  overflow-y: auto;
+  display: flex; flex-direction: column;
+}
+.main-header {
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 20px;
+  flex-shrink: 0;
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 12px;
+}
+.mh-left {}
+.mh-name {
+  font-family: 'IBM Plex Sans Condensed', sans-serif;
+  font-weight: 700; font-size: 20px; color: var(--ink);
+  margin-bottom: 3px;
+}
+.mh-meta {
+  display: flex; gap: 14px; flex-wrap: wrap;
+}
+.mh-meta-item {
+  font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted);
+}
+.mh-meta-item span { color: var(--ink2); }
+.mh-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+.btn {
+  font-family: 'IBM Plex Sans', sans-serif; font-weight: 500; font-size: 12px;
+  padding: 7px 16px; border-radius: var(--r); cursor: pointer; border: none;
+  transition: all .14s; display: flex; align-items: center; gap: 6px;
+}
+.btn-approve { background: var(--green); color: #fff; }
+.btn-approve:hover { background: #15663e; }
+.btn-refer   { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-bd); }
+.btn-refer:hover { background: #fdecc8; }
+.btn-decline { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-bd); }
+.btn-decline:hover { background: #fcd8df; }
+.btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+.btn-ghost:hover { background: var(--canvas); color: var(--ink); }
+
+.main-body { padding: 16px 20px; flex: 1; }
+
+/* cards */
+.card {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--r-lg); padding: 16px 18px;
+  margin-bottom: 12px;
+}
+.card-title {
+  font-family: 'IBM Plex Sans Condensed', sans-serif;
+  font-weight: 700; font-size: 11px;
+  text-transform: uppercase; letter-spacing: .07em; color: var(--muted);
+  margin-bottom: 12px; display: flex; align-items: center; gap: 6px;
+}
+.card-title .ct-badge {
+  font-size: 10px; padding: 1px 7px; border-radius: 2px;
+  background: var(--canvas); color: var(--muted);
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.data-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+  background: var(--border2); border-radius: var(--r); overflow: hidden;
+  margin-bottom: 0;
+}
+.data-cell {
+  background: var(--panel); padding: 10px 14px;
+}
+.data-cell-label {
+  font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+  color: var(--muted); text-transform: uppercase; letter-spacing: .05em;
+  margin-bottom: 3px;
+}
+.data-cell-val {
+  font-family: 'IBM Plex Sans Condensed', sans-serif;
+  font-weight: 600; font-size: 15px; color: var(--ink);
+}
+.data-cell-val.good { color: var(--green); }
+.data-cell-val.warn { color: var(--amber); }
+.data-cell-val.bad  { color: var(--red);   }
+.data-cell-sub { font-size: 10px; color: var(--muted); margin-top: 1px; }
+
+/* factor bars */
+.factor-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 0; border-bottom: 1px solid var(--border2);
+}
+.factor-row:last-child { border-bottom: none; }
+.factor-label { width: 130px; font-size: 12px; color: var(--ink2); flex-shrink: 0; }
+.factor-track {
+  flex: 1; height: 6px; background: var(--border);
+  border-radius: 3px; overflow: hidden;
+}
+.factor-fill { height: 100%; border-radius: 3px; transition: width .8s cubic-bezier(.4,0,.2,1); }
+.factor-val {
+  width: 48px; text-align: right;
+  font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--ink2);
+}
+.factor-impact {
+  width: 52px; text-align: right;
+  font-family: 'IBM Plex Mono', monospace; font-size: 10px; flex-shrink: 0;
+}
+.fi-pos { color: var(--green); }
+.fi-neg { color: var(--red); }
+.fi-neu { color: var(--muted); }
+
+/* doc checklist */
+.doc-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 0; border-bottom: 1px solid var(--border2);
+}
+.doc-row:last-child { border-bottom: none; }
+.doc-icon { width: 26px; height: 26px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; }
+.di-ok   { background: var(--green-bg); }
+.di-warn { background: var(--amber-bg); }
+.di-miss { background: var(--red-bg); }
+.doc-name { flex: 1; font-size: 12px; color: var(--ink2); }
+.doc-status { font-size: 11px; padding: 2px 8px; border-radius: 3px; font-family: 'IBM Plex Mono', monospace; }
+.ds-ok   { background: var(--green-bg); color: var(--green); }
+.ds-warn { background: var(--amber-bg); color: var(--amber); }
+.ds-miss { background: var(--red-bg);   color: var(--red);   }
+.doc-note { font-size: 10px; color: var(--muted); margin-left: 4px; }
+
+/* notes area */
+.notes-area {
+  width: 100%; min-height: 72px; resize: vertical;
+  border: 1px solid var(--border); border-radius: var(--r);
+  padding: 10px 12px; font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 12.5px; color: var(--ink); background: var(--panel);
+  outline: none; transition: border-color .15s;
+}
+.notes-area:focus { border-color: var(--green); }
+
+/* timeline */
+.tl-item {
+  display: flex; gap: 10px; padding: 7px 0;
+  border-bottom: 1px solid var(--border2);
+}
+.tl-item:last-child { border-bottom: none; }
+.tl-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  margin-top: 5px; flex-shrink: 0;
+}
+.tl-body { flex: 1; }
+.tl-body strong { font-weight: 600; font-size: 12px; color: var(--ink); }
+.tl-body p { font-size: 11px; color: var(--muted); margin-top: 1px; }
+.tl-time { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted); flex-shrink: 0; }
+
+/* ═══════════════════════════════════════════════
+   AI PANEL (right)
+═══════════════════════════════════════════════ */
+.ai-panel {
+  grid-area: ai;
+  background: var(--white);
+  border-left: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.ai-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border2);
+  flex-shrink: 0; display: flex; align-items: center; gap: 8px;
+}
+.ai-header-title {
+  font-family: 'IBM Plex Sans Condensed', sans-serif;
+  font-weight: 700; font-size: 12px; color: var(--ink);
+  text-transform: uppercase; letter-spacing: .05em;
+}
+.ai-live-dot {
+  width: 7px; height: 7px; border-radius: 50%; background: #4eca84;
+  animation: pulse-green 1.8s ease-in-out infinite; margin-left: auto;
+}
+@keyframes pulse-green {
+  0%,100% { box-shadow: 0 0 0 0 rgba(78,202,132,.5); }
+  50%      { box-shadow: 0 0 0 5px rgba(78,202,132,0); }
+}
+.ai-model-tag {
+  font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+  color: var(--muted); margin-left: 4px;
+}
+
+.ai-body { flex: 1; overflow-y: auto; padding: 14px; }
+
+/* verdict */
+.verdict-block {
+  border-radius: var(--r-lg); padding: 14px 16px; margin-bottom: 14px;
+  border: 1px solid;
+}
+.vb-approve { background: var(--green-bg); border-color: var(--green-bd); }
+.vb-refer   { background: var(--amber-bg); border-color: var(--amber-bd); }
+.vb-decline { background: var(--red-bg);   border-color: var(--red-bd);   }
+
+.verdict-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.verdict-label {
+  font-family: 'IBM Plex Sans Condensed', sans-serif; font-weight: 700; font-size: 14px;
+}
+.verdict-conf {
+  font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+  background: rgba(0,0,0,.06); padding: 2px 8px; border-radius: 3px;
+}
+
+/* score donut */
+.score-row { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
+.donut-wrap { position: relative; width: 64px; height: 64px; flex-shrink: 0; }
+.donut-svg { width: 64px; height: 64px; transform: rotate(-90deg); }
+.donut-bg   { fill: none; stroke: rgba(0,0,0,.08); stroke-width: 7; }
+.donut-arc  { fill: none; stroke-width: 7; stroke-linecap: round; transition: stroke-dashoffset .9s cubic-bezier(.4,0,.2,1); }
+.donut-inner {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+}
+.donut-num {
+  font-family: 'IBM Plex Sans Condensed', sans-serif; font-weight: 700; font-size: 16px; color: var(--ink);
+  line-height: 1;
+}
+.donut-sub { font-size: 8px; color: var(--muted); font-family: 'IBM Plex Mono', monospace; }
+.score-breakdown { flex: 1; }
+.sb-row {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 11px; padding: 2px 0;
+}
+.sb-label { color: var(--muted); }
+.sb-val { font-family: 'IBM Plex Mono', monospace; color: var(--ink2); }
+
+/* reasoning */
+.ai-section-title {
+  font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+  text-transform: uppercase; letter-spacing: .08em; color: var(--muted);
+  margin: 14px 0 8px;
+}
+.reasoning-block {
+  background: var(--panel); border: 1px solid var(--border2);
+  border-radius: var(--r); padding: 11px 13px;
+  font-size: 12px; color: var(--ink2); line-height: 1.65;
+  margin-bottom: 10px;
+}
+
+/* flags */
+.flag-item {
+  display: flex; gap: 10px; align-items: flex-start;
+  padding: 9px 12px; border-radius: var(--r); margin-bottom: 7px;
+  border: 1px solid;
+}
+.flag-fraud-item { background: var(--red-bg); border-color: var(--red-bd); }
+.flag-docs-item  { background: var(--amber-bg); border-color: var(--amber-bd); }
+.flag-info-item  { background: var(--blue-bg); border-color: var(--blue-bd); }
+.flag-icon { font-size: 13px; flex-shrink: 0; margin-top: 1px; }
+.flag-content {}
+.flag-title { font-weight: 600; font-size: 12px; color: var(--ink); margin-bottom: 2px; }
+.flag-desc  { font-size: 11px; color: var(--muted); line-height: 1.5; }
+
+/* ai shap mini bars */
+.shap-row {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 5px;
+}
+.shap-label { font-size: 11px; color: var(--ink2); width: 110px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.shap-bar-track { flex: 1; height: 8px; border-radius: 2px; background: var(--border); overflow: hidden; position: relative; }
+.shap-bar-fill { height: 100%; border-radius: 2px; }
+.shap-val { font-family: 'IBM Plex Mono', monospace; font-size: 10px; width: 32px; text-align: right; }
+
+/* suggested terms */
+.terms-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.term-chip {
+  background: var(--canvas); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 8px 10px;
+}
+.term-chip-label { font-size: 10px; color: var(--muted); font-family: 'IBM Plex Mono', monospace; text-transform: uppercase; }
+.term-chip-val { font-family: 'IBM Plex Sans Condensed', sans-serif; font-weight: 700; font-size: 14px; color: var(--ink); margin-top: 2px; }
+
+/* ═══════════════════════════════════════════════
+   DECISION MODAL
+═══════════════════════════════════════════════ */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(26,25,22,.5); z-index: 200;
+  align-items: center; justify-content: center;
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: var(--white); border-radius: var(--r-lg);
+  width: 440px; border: 1px solid var(--border);
+  box-shadow: 0 20px 60px rgba(0,0,0,.2);
+  animation: slideUp .25s ease;
+}
+@keyframes slideUp { from { transform: translateY(12px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.modal-header {
+  padding: 16px 20px; border-bottom: 1px solid var(--border2);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.modal-title { font-family: 'IBM Plex Sans Condensed', sans-serif; font-weight: 700; font-size: 15px; color: var(--ink); }
+.modal-close { cursor: pointer; color: var(--muted); font-size: 18px; background: none; border: none; }
+.modal-body { padding: 20px; }
+.modal-footer { padding: 14px 20px; border-top: 1px solid var(--border2); display: flex; gap: 8px; justify-content: flex-end; }
+
+.modal-dec-icon { font-size: 32px; text-align: center; margin-bottom: 12px; }
+.modal-dec-title { font-family: 'IBM Plex Sans Condensed', sans-serif; font-weight: 700; font-size: 17px; text-align: center; margin-bottom: 4px; color: var(--ink); }
+.modal-dec-sub { font-size: 12px; color: var(--muted); text-align: center; margin-bottom: 16px; }
+.modal-field { margin-bottom: 14px; }
+.modal-label { font-size: 11px; color: var(--muted); font-family: 'IBM Plex Mono', monospace; text-transform: uppercase; margin-bottom: 5px; }
+.modal-input {
+  width: 100%; padding: 8px 12px; border: 1px solid var(--border);
+  border-radius: var(--r); font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 13px; color: var(--ink); background: var(--panel); outline: none;
+  transition: border-color .15s;
+}
+.modal-input:focus { border-color: var(--green); }
+.modal-textarea {
+  width: 100%; min-height: 80px; resize: vertical;
+  padding: 8px 12px; border: 1px solid var(--border);
+  border-radius: var(--r); font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 12px; color: var(--ink); background: var(--panel); outline: none;
+  transition: border-color .15s;
+}
+.modal-textarea:focus { border-color: var(--green); }
+
+/* toast */
+.toast {
+  position: fixed; bottom: 24px; right: 24px; z-index: 300;
+  background: var(--ink); color: #fff; border-radius: var(--r);
+  padding: 12px 20px; font-size: 13px; font-weight: 500;
+  box-shadow: 0 8px 24px rgba(0,0,0,.3);
+  display: none; animation: toastIn .25s ease;
+}
+.toast.show { display: block; }
+@keyframes toastIn { from { transform: translateY(8px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+/* empty state */
+.empty-state {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  color: var(--muted); gap: 8px; padding: 40px;
+}
+.empty-icon { font-size: 36px; opacity: .4; }
+.empty-title { font-family: 'IBM Plex Sans Condensed', sans-serif; font-weight: 700; font-size: 15px; color: var(--muted); }
+.empty-sub { font-size: 12px; text-align: center; max-width: 200px; line-height: 1.5; }
+
+/* portfolio strip at bottom of main */
+.portfolio-strip {
+  background: var(--white); border-top: 1px solid var(--border);
+  padding: 10px 20px; display: flex; gap: 28px; align-items: center;
+  flex-shrink: 0;
+}
+.ps-item { text-align: center; }
+.ps-val { font-family: 'IBM Plex Sans Condensed', sans-serif; font-weight: 700; font-size: 16px; color: var(--ink); }
+.ps-label { font-size: 10px; color: var(--muted); font-family: 'IBM Plex Mono', monospace; text-transform: uppercase; }
+.ps-divider { width: 1px; height: 30px; background: var(--border); }
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- ═══ TOPBAR ═══ -->
+  <header class="topbar">
+    <div class="tb-logo">Fin<span>pal</span></div>
+    <div class="tb-nav-item active">Queue</div>
+    <div class="tb-nav-item">Portfolio</div>
+    <div class="tb-nav-item">Reports</div>
+    <div class="tb-nav-item">Settings</div>
+    <div class="tb-spacer"></div>
+    <div class="tb-badge">● AI ONLINE</div>
+    <div class="tb-user">
+      <div class="tb-avatar">SC</div>
+      <span>S. Connolly</span>
+    </div>
+  </header>
+
+  <!-- ═══ QUEUE ═══ -->
+  <aside class="queue">
+    <div class="queue-header">
+      <div class="queue-title">Today's Queue <span style="color:var(--ink2);margin-left:4px">14</span></div>
+      <div class="queue-filters">
+        <button class="q-filter on" onclick="filterQueue(this,'all')">All</button>
+        <button class="q-filter" onclick="filterQueue(this,'pending')">Pending</button>
+        <button class="q-filter" onclick="filterQueue(this,'refer')">Referred</button>
+        <button class="q-filter" onclick="filterQueue(this,'flag')">⚑ Flagged</button>
+      </div>
+    </div>
+    <div class="queue-list" id="queue-list"></div>
+  </aside>
+
+  <!-- ═══ MAIN ═══ -->
+  <main class="main" id="main-panel">
+    <div class="empty-state" id="empty-state">
+      <div class="empty-icon">📋</div>
+      <div class="empty-title">No application selected</div>
+      <div class="empty-sub">Pick an application from the queue to begin review</div>
+    </div>
+    <!-- application view injected by JS -->
+    <div id="app-view" style="display:none;flex-direction:column;flex:1;overflow:hidden;">
+
+      <div class="main-header">
+        <div class="mh-left">
+          <div class="mh-name" id="app-name">—</div>
+          <div class="mh-meta">
+            <div class="mh-meta-item">Ref: <span id="app-ref">—</span></div>
+            <div class="mh-meta-item">Type: <span id="app-type">—</span></div>
+            <div class="mh-meta-item">Amount: <span id="app-amount">—</span></div>
+            <div class="mh-meta-item">Received: <span id="app-received">—</span></div>
+            <div class="mh-meta-item">Sector/Purpose: <span id="app-purpose">—</span></div>
+          </div>
+        </div>
+        <div class="mh-actions">
+          <button class="btn btn-ghost" onclick="openModal('refer')">Refer ↗</button>
+          <button class="btn btn-decline" onclick="openModal('decline')">Decline</button>
+          <button class="btn btn-approve" onclick="openModal('approve')">Approve ✓</button>
+        </div>
+      </div>
+
+      <div class="main-body" id="main-body" style="overflow-y:auto;flex:1;">
+        <!-- injected per application -->
+      </div>
+
+      <div class="portfolio-strip">
+        <div class="ps-item"><div class="ps-val">14</div><div class="ps-label">In Queue</div></div>
+        <div class="ps-divider"></div>
+        <div class="ps-item"><div class="ps-val">9</div><div class="ps-label">Pending</div></div>
+        <div class="ps-divider"></div>
+        <div class="ps-item"><div class="ps-val">3</div><div class="ps-label">Referred</div></div>
+        <div class="ps-divider"></div>
+        <div class="ps-item"><div class="ps-val" style="color:var(--green)">€2.1M</div><div class="ps-label">Approved Today</div></div>
+        <div class="ps-divider"></div>
+        <div class="ps-item"><div class="ps-val" style="color:var(--red)">€340K</div><div class="ps-label">Declined Today</div></div>
+        <div class="ps-divider"></div>
+        <div class="ps-item"><div class="ps-val">62%</div><div class="ps-label">Approval Rate</div></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ═══ AI PANEL ═══ -->
+  <aside class="ai-panel">
+    <div class="ai-header">
+      <div class="ai-header-title">AI Assessment</div>
+      <div class="ai-model-tag">finpal-v3.1</div>
+      <div class="ai-live-dot"></div>
+    </div>
+    <div class="ai-body" id="ai-body">
+      <div class="empty-state" style="height:100%">
+        <div class="empty-icon">🤖</div>
+        <div class="empty-title">Awaiting selection</div>
+        <div class="empty-sub">AI analysis will appear here once you open an application</div>
+      </div>
+    </div>
+  </aside>
+
+</div><!-- /shell -->
+
+<!-- ═══ DECISION MODAL ═══ -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Confirm Decision</div>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-approve" id="modal-confirm" onclick="confirmDecision()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ═══════════════════ JAVASCRIPT ═══════════════════ -->
+<script>
+/* ─── DATA ─────────────────────────────────────────── */
+const APPS = [
+  {
+    id: 'FP-9041', name: 'Aoife Brennan', type: 'Household',
+    amount: 42000, purpose: 'Home Improvement', term: 60,
+    received: 'Today 08:14', status: 'pending',
+    flags: ['docs'],
+    score: 74, aiVerdict: 'approve', confidence: 88,
+    data: {
+      income: 54000, employment: 'Full-Time Permanent', employer: 'HSE',
+      existing_debt_pm: 380, credit_score: 680, age: 36,
+      dti: 32, lti: 0.78, dtsr: 18
+    },
+    factors: [
+      { label: 'Credit History',   val: '680 / 1000',  pct: 68, impact: '+14.2', dir: 'pos' },
+      { label: 'Debt-to-Income',   val: '32%',          pct: 42, impact: '+8.1',  dir: 'pos' },
+      { label: 'Employment Stability', val: 'Permanent', pct: 90, impact: '+11.6', dir: 'pos' },
+      { label: 'Loan-to-Income',   val: '0.78×',        pct: 78, impact: '+6.3',  dir: 'pos' },
+      { label: 'Repayment History',val: 'No defaults',  pct: 100, impact: '+9.8', dir: 'pos' },
+      { label: 'Income Stability', val: 'Public sector',pct: 95, impact: '+7.2',  dir: 'pos' },
+    ],
+    docs: [
+      { name: 'Photo ID (Passport)', status: 'ok',   note: 'Verified' },
+      { name: '3 Months Payslips',   status: 'ok',   note: 'Verified' },
+      { name: 'Bank Statements (6mo)',status: 'warn', note: 'Only 3 months provided' },
+      { name: 'Proof of Address',     status: 'ok',  note: 'Verified' },
+      { name: 'Employment Letter',    status: 'miss', note: 'Not submitted' },
+    ],
+    reasoning: 'Strong application. Applicant is a permanent public-sector employee with a stable income of €54,000. Debt-to-income of 32% is well within policy ceiling of 45%. Credit score of 680 is above the 620 threshold. Loan-to-income of 0.78× is conservative. Main concern: 3-month bank statement gap and missing employment letter — recommend requesting before final issue. AI confidence is high at 88%.',
+    timeline: [
+      { text: 'Application submitted online', sub: 'Via self-service portal', time: '08:14', color: 'var(--blue)' },
+      { text: 'Open Banking data pulled', sub: 'Revolut + AIB connected', time: '08:14', color: 'var(--green)' },
+      { text: 'Bureau check completed', sub: 'CATO score returned: 680', time: '08:15', color: 'var(--green)' },
+      { text: 'AI scoring complete', sub: 'Score 74 / Approve at 88% confidence', time: '08:15', color: 'var(--green)' },
+      { text: 'Docs review flagged', sub: 'Employment letter missing', time: '08:15', color: 'var(--amber)' },
+    ],
+    suggestedRate: '6.9', suggestedTerm: 60,
+  },
+  {
+    id: 'FP-9042', name: 'Murphy Agri Supplies Ltd', type: 'SME',
+    amount: 180000, purpose: 'Equipment Finance', term: 48,
+    received: 'Today 08:31', status: 'refer',
+    flags: ['fraud'],
+    score: 51, aiVerdict: 'refer', confidence: 72,
+    data: {
+      revenue: 620000, ebitda_pct: 9, years_trading: 3.5, employees: 8,
+      sector: 'Agriculture', existing_debt: 42000, dscr: 1.18
+    },
+    factors: [
+      { label: 'Revenue Coverage',  val: '0.29× LTR',  pct: 71, impact: '+9.0',  dir: 'pos' },
+      { label: 'EBITDA Margin',     val: '9%',          pct: 45, impact: '-3.2',  dir: 'neg' },
+      { label: 'Years Trading',     val: '3.5 yrs',     pct: 52, impact: '-4.1',  dir: 'neg' },
+      { label: 'Sector Risk',       val: 'Agriculture', pct: 60, impact: '-1.8',  dir: 'neg' },
+      { label: 'DSCR',             val: '1.18×',        pct: 55, impact: '+4.2',  dir: 'pos' },
+      { label: 'Director Credit',   val: '591 / 1000',  pct: 59, impact: '-2.9',  dir: 'neg' },
+    ],
+    docs: [
+      { name: 'Certificate of Incorporation', status: 'ok',   note: 'Verified' },
+      { name: '2 Years Audited Accounts',     status: 'ok',   note: 'FY22 & FY23' },
+      { name: 'Management Accounts (YTD)',    status: 'warn', note: 'Unaudited, Jun 2024' },
+      { name: 'Director Passport',            status: 'ok',   note: 'Verified' },
+      { name: 'Revenue / Tax Clearance',      status: 'miss', note: 'Not submitted' },
+      { name: 'Asset Quote / Invoice',        status: 'warn', note: 'Quote only, no supplier detail' },
+    ],
+    reasoning: 'Borderline SME. Adequate revenue at €620K but thin EBITDA of 9% leaves limited debt service headroom. DSCR of 1.18× is above minimum (1.10×) but stressed at +2% rates it falls to 1.04×. Director credit score of 591 is a secondary concern. Revenue / Tax Clearance not submitted — required under AML policy §3.4. Asset quote lacks supplier verification: potential procurement fraud indicator. Recommend refer to senior underwriter with request for full tax clearance and asset supplier confirmation.',
+    timeline: [
+      { text: 'Application submitted', sub: 'Via broker portal', time: '08:31', color: 'var(--blue)' },
+      { text: 'Companies House data pulled', sub: 'CRO verified, active status', time: '08:32', color: 'var(--green)' },
+      { text: 'Fraud signal detected', sub: 'Asset supplier unverified', time: '08:32', color: 'var(--red)' },
+      { text: 'AI scoring complete', sub: 'Score 51 / Refer at 72% confidence', time: '08:32', color: 'var(--amber)' },
+      { text: 'Tax clearance missing', sub: 'AML hold triggered', time: '08:33', color: 'var(--amber)' },
+    ],
+    suggestedRate: '8.4', suggestedTerm: 48,
+  },
+  {
+    id: 'FP-9043', name: 'Declan Farrell', type: 'Household',
+    amount: 15000, purpose: 'Debt Consolidation', term: 36,
+    received: 'Today 09:02', status: 'pending',
+    flags: [],
+    score: 82, aiVerdict: 'approve', confidence: 93,
+    data: {
+      income: 61000, employment: 'Full-Time Permanent', employer: 'CRH plc',
+      existing_debt_pm: 220, credit_score: 730, age: 41,
+      dti: 21, lti: 0.25, dtsr: 11
+    },
+    factors: [
+      { label: 'Credit History',      val: '730 / 1000', pct: 73, impact: '+16.0', dir: 'pos' },
+      { label: 'Debt-to-Income',      val: '21%',         pct: 79, impact: '+12.1', dir: 'pos' },
+      { label: 'Employment Stability',val: 'Permanent',   pct: 90, impact: '+11.6', dir: 'pos' },
+      { label: 'Loan-to-Income',      val: '0.25×',       pct: 95, impact: '+9.4',  dir: 'pos' },
+      { label: 'Repayment History',   val: 'Clean',       pct: 100,impact: '+9.8',  dir: 'pos' },
+      { label: 'Consolidation Risk',  val: 'Low',         pct: 80, impact: '+5.0',  dir: 'pos' },
+    ],
+    docs: [
+      { name: 'Photo ID (Passport)',    status: 'ok', note: 'Verified' },
+      { name: '3 Months Payslips',      status: 'ok', note: 'Verified' },
+      { name: 'Bank Statements (6mo)',  status: 'ok', note: 'Verified' },
+      { name: 'Proof of Address',       status: 'ok', note: 'Verified' },
+      { name: 'Existing Loan Statements',status:'ok', note: 'All 3 loans verified' },
+    ],
+    reasoning: 'Clean application. High earner with €61K income and a minimal debt service burden of 21%. Credit score of 730 is well above threshold. Consolidation purpose reduces payment complexity and improves affordability. All documents complete and verified. No fraud signals. Recommend full approval at standard rate. AI confidence 93%.',
+    timeline: [
+      { text: 'Application submitted online', sub: 'Via self-service portal', time: '09:02', color: 'var(--blue)' },
+      { text: 'Open Banking data pulled',     sub: 'Bank of Ireland connected', time: '09:02', color: 'var(--green)' },
+      { text: 'Bureau check completed',       sub: 'CATO score returned: 730', time: '09:02', color: 'var(--green)' },
+      { text: 'AI scoring complete',          sub: 'Score 82 / Approve at 93% confidence', time: '09:03', color: 'var(--green)' },
+      { text: 'All documents verified',       sub: 'No exceptions', time: '09:03', color: 'var(--green)' },
+    ],
+    suggestedRate: '5.9', suggestedTerm: 36,
+  },
+  {
+    id: 'FP-9044', name: 'Brighid Ó Maolalaidh', type: 'Household',
+    amount: 28000, purpose: 'Car Purchase', term: 60,
+    received: 'Today 09:15', status: 'pending',
+    flags: [],
+    score: 39, aiVerdict: 'decline', confidence: 85,
+    data: {
+      income: 28000, employment: 'Contract', employer: 'Self (Locum)',
+      existing_debt_pm: 690, credit_score: 510, age: 29,
+      dti: 74, lti: 1.0, dtsr: 43
+    },
+    factors: [
+      { label: 'Credit History',      val: '510 / 1000', pct: 51, impact: '-11.2', dir: 'neg' },
+      { label: 'Debt-to-Income',      val: '74%',         pct: 10, impact: '-18.4', dir: 'neg' },
+      { label: 'Employment Stability',val: 'Contract',    pct: 38, impact: '-7.3',  dir: 'neg' },
+      { label: 'Loan-to-Income',      val: '1.0×',        pct: 32, impact: '-8.1',  dir: 'neg' },
+      { label: 'Repayment History',   val: '1 missed pmt',pct: 30, impact: '-9.2',  dir: 'neg' },
+      { label: 'Debt Service Ratio',  val: '43%',         pct: 15, impact: '-12.0', dir: 'neg' },
+    ],
+    docs: [
+      { name: 'Photo ID (Passport)',   status: 'ok',  note: 'Verified' },
+      { name: '3 Months Payslips',     status: 'warn',note: 'Irregular amounts' },
+      { name: 'Bank Statements (6mo)', status: 'ok',  note: 'Verified' },
+      { name: 'Proof of Address',      status: 'ok',  note: 'Verified' },
+    ],
+    reasoning: 'Application falls significantly below minimum thresholds. Debt-to-income of 74% exceeds the 45% policy ceiling by 29 percentage points. Credit score of 510 is below the 580 minimum. One missed payment on existing loan noted in bureau data. Contract employment with irregular payslips introduces income uncertainty. Debt service coverage ratio of 43% confirms unaffordable. Recommend standard policy decline. Consumer Protection Code §9 adverse notice required.',
+    timeline: [
+      { text: 'Application submitted online', sub: 'Via self-service portal', time: '09:15', color: 'var(--blue)' },
+      { text: 'Open Banking data pulled',     sub: 'N26 connected', time: '09:15', color: 'var(--green)' },
+      { text: 'Bureau check completed',       sub: 'CATO score returned: 510 — 1 missed payment', time: '09:15', color: 'var(--red)' },
+      { text: 'AI scoring complete',          sub: 'Score 39 / Decline at 85% confidence', time: '09:16', color: 'var(--red)' },
+    ],
+    suggestedRate: null, suggestedTerm: null,
+  },
+  {
+    id: 'FP-9045', name: 'Salthill Fitness Ltd', type: 'SME',
+    amount: 95000, purpose: 'Expansion', term: 60,
+    received: 'Today 09:28', status: 'pending',
+    flags: [],
+    score: 68, aiVerdict: 'approve', confidence: 80,
+    data: {
+      revenue: 410000, ebitda_pct: 14, years_trading: 6, employees: 11,
+      sector: 'Leisure', existing_debt: 18000, dscr: 1.42
+    },
+    factors: [
+      { label: 'Revenue Coverage',  val: '0.23× LTR',  pct: 77, impact: '+10.2', dir: 'pos' },
+      { label: 'EBITDA Margin',     val: '14%',          pct: 65, impact: '+6.8',  dir: 'pos' },
+      { label: 'Years Trading',     val: '6 yrs',        pct: 80, impact: '+8.0',  dir: 'pos' },
+      { label: 'DSCR',             val: '1.42×',         pct: 72, impact: '+7.6',  dir: 'pos' },
+      { label: 'Sector Risk',       val: 'Leisure',      pct: 50, impact: '-4.1',  dir: 'neg' },
+      { label: 'Director Credit',   val: '661 / 1000',   pct: 66, impact: '+3.2',  dir: 'pos' },
+    ],
+    docs: [
+      { name: 'Certificate of Incorporation', status: 'ok', note: 'Verified' },
+      { name: '2 Years Audited Accounts',     status: 'ok', note: 'FY22 & FY23' },
+      { name: 'Management Accounts (YTD)',    status: 'ok', note: 'Sep 2024, unaudited' },
+      { name: 'Director Passport',            status: 'ok', note: 'Verified' },
+      { name: 'Revenue / Tax Clearance',      status: 'ok', note: 'Valid to Dec 2024' },
+    ],
+    reasoning: 'Solid SME application. Six years of trading with improving margins. EBITDA of 14% supports debt service; DSCR of 1.42× gives stress headroom. Leisure sector assigned moderate risk weighting due to post-COVID sensitivity, but revenue trend is upward (+18% YoY). Full document set received and verified. AI confidence 80%. Recommend approve with standard commercial covenant package.',
+    timeline: [
+      { text: 'Application submitted', sub: 'Via broker portal', time: '09:28', color: 'var(--blue)' },
+      { text: 'CRO & Revenue verified', sub: 'Tax clearance valid', time: '09:29', color: 'var(--green)' },
+      { text: 'AI scoring complete', sub: 'Score 68 / Approve at 80% confidence', time: '09:29', color: 'var(--green)' },
+      { text: 'Full document set received', sub: 'No exceptions', time: '09:29', color: 'var(--green)' },
+    ],
+    suggestedRate: '7.5', suggestedTerm: 60,
+  },
+];
+
+/* ─── STATE ─────────────────────────────────────────── */
+let activeId = null;
+let pendingDecision = null;
+let filterMode = 'all';
+
+/* ─── QUEUE RENDER ─────────────────────────────────── */
+function renderQueue() {
+  const list = document.getElementById('queue-list');
+  const filtered = APPS.filter(a => {
+    if (filterMode === 'all') return true;
+    if (filterMode === 'pending') return a.status === 'pending';
+    if (filterMode === 'refer') return a.status === 'refer';
+    if (filterMode === 'flag') return a.flags.length > 0;
+    return true;
+  });
+  list.innerHTML = filtered.map(a => {
+    const scoreColor = a.score >= 62 ? 'var(--green)' : a.score >= 42 ? 'var(--amber)' : 'var(--red)';
+    const sCls = a.aiVerdict === 'approve' ? 'qs-approve' : a.aiVerdict === 'refer' ? 'qs-refer' : 'qs-decline';
+    const sLabel = a.aiVerdict === 'approve' ? '↑ Approve' : a.aiVerdict === 'refer' ? '? Refer' : '↓ Decline';
+    const flagHtml = a.flags.includes('fraud') ? '<div class="q-flag flag-fraud" title="Fraud flag"></div>'
+                   : a.flags.includes('docs')  ? '<div class="q-flag flag-docs"  title="Docs incomplete"></div>'
+                   : '';
+    return `<div class="q-item${activeId===a.id?' selected':''}" onclick="selectApp('${a.id}')">
+      ${flagHtml}
+      <div class="q-item-top">
+        <div class="q-name">${a.name}</div>
+        <div class="q-amount">€${a.amount.toLocaleString('en-IE')}</div>
+      </div>
+      <div class="q-item-mid">
+        <div class="q-ref">${a.id}</div>
+        <div class="q-type">${a.type}</div>
+      </div>
+      <div class="q-item-bot">
+        <div class="q-score-wrap">
+          <div class="q-score-bar"><div class="q-score-fill" style="width:${a.score}%;background:${scoreColor}"></div></div>
+          <div class="q-score-num">${a.score}</div>
+        </div>
+        <span class="q-status ${sCls}">${sLabel}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterQueue(btn, mode) {
+  filterMode = mode;
+  document.querySelectorAll('.q-filter').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  renderQueue();
+}
+
+/* ─── SELECT APP ─────────────────────────────────────── */
+function selectApp(id) {
+  activeId = id;
+  renderQueue();
+  const app = APPS.find(a => a.id === id);
+  if (!app) return;
+
+  document.getElementById('empty-state').style.display = 'none';
+  const av = document.getElementById('app-view');
+  av.style.display = 'flex';
+
+  // header
+  document.getElementById('app-name').textContent = app.name;
+  document.getElementById('app-ref').textContent = app.id;
+  document.getElementById('app-type').textContent = app.type;
+  document.getElementById('app-amount').textContent = '€' + app.amount.toLocaleString('en-IE');
+  document.getElementById('app-received').textContent = app.received;
+  document.getElementById('app-purpose').textContent = app.purpose;
+
+  renderMainBody(app);
+  renderAiPanel(app);
+}
+
+/* ─── MAIN BODY ──────────────────────────────────────── */
+function renderMainBody(app) {
+  const isHH = app.type === 'Household';
+  const d = app.data;
+
+  // data grid
+  let gridHtml = '';
+  if (isHH) {
+    const dtiCls = d.dti > 45 ? 'bad' : d.dti > 35 ? 'warn' : 'good';
+    gridHtml = `
+      <div class="data-cell"><div class="data-cell-label">Annual Income</div><div class="data-cell-val">€${d.income.toLocaleString('en-IE')}</div><div class="data-cell-sub">${d.employment}</div></div>
+      <div class="data-cell"><div class="data-cell-label">Employer</div><div class="data-cell-val" style="font-size:13px">${d.employer}</div><div class="data-cell-sub">Verified</div></div>
+      <div class="data-cell"><div class="data-cell-label">Credit Score</div><div class="data-cell-val ${d.credit_score>=620?'good':d.credit_score>=500?'warn':'bad'}">${d.credit_score}</div><div class="data-cell-sub">CATO bureau</div></div>
+      <div class="data-cell"><div class="data-cell-label">Debt-to-Income</div><div class="data-cell-val ${dtiCls}">${d.dti}%</div><div class="data-cell-sub">Policy max: 45%</div></div>
+      <div class="data-cell"><div class="data-cell-label">Loan-to-Income</div><div class="data-cell-val ${d.lti>5?'bad':d.lti>3?'warn':'good'}">${d.lti}×</div><div class="data-cell-sub">Policy max: 5×</div></div>
+      <div class="data-cell"><div class="data-cell-label">Monthly Debt Svc</div><div class="data-cell-val">€${d.existing_debt_pm.toLocaleString()}</div><div class="data-cell-sub">Existing obligations</div></div>
+    `;
+  } else {
+    gridHtml = `
+      <div class="data-cell"><div class="data-cell-label">Annual Revenue</div><div class="data-cell-val">€${d.revenue.toLocaleString('en-IE')}</div><div class="data-cell-sub">${d.sector}</div></div>
+      <div class="data-cell"><div class="data-cell-label">EBITDA Margin</div><div class="data-cell-val ${d.ebitda_pct>=12?'good':d.ebitda_pct>=7?'warn':'bad'}">${d.ebitda_pct}%</div><div class="data-cell-sub">Policy min: 7%</div></div>
+      <div class="data-cell"><div class="data-cell-label">Years Trading</div><div class="data-cell-val ${d.years_trading>=3?'good':d.years_trading>=1?'warn':'bad'}">${d.years_trading} yrs</div><div class="data-cell-sub">Policy min: 2 yrs</div></div>
+      <div class="data-cell"><div class="data-cell-label">Employees</div><div class="data-cell-val">${d.employees}</div><div class="data-cell-sub">FTE</div></div>
+      <div class="data-cell"><div class="data-cell-label">DSCR</div><div class="data-cell-val ${d.dscr>=1.25?'good':d.dscr>=1.1?'warn':'bad'}">${d.dscr}×</div><div class="data-cell-sub">Policy min: 1.10×</div></div>
+      <div class="data-cell"><div class="data-cell-label">Existing Debt</div><div class="data-cell-val">€${d.existing_debt.toLocaleString()}/yr</div><div class="data-cell-sub">Existing facilities</div></div>
+    `;
+  }
+
+  // factors
+  const factorHtml = app.factors.map(f => {
+    const fillColor = f.dir === 'pos' ? 'var(--green)' : f.dir === 'neg' ? 'var(--red)' : 'var(--muted)';
+    const impactCls = f.dir === 'pos' ? 'fi-pos' : f.dir === 'neg' ? 'fi-neg' : 'fi-neu';
+    const impactLabel = f.dir === 'pos' ? '+' + f.impact : f.impact;
+    return `<div class="factor-row">
+      <div class="factor-label">${f.label}</div>
+      <div class="factor-track"><div class="factor-fill" style="width:${f.pct}%;background:${fillColor}"></div></div>
+      <div class="factor-val">${f.val}</div>
+      <div class="factor-impact ${impactCls}">${impactLabel}</div>
+    </div>`;
+  }).join('');
+
+  // docs
+  const docHtml = app.docs.map(d => {
+    const icls = d.status==='ok'?'di-ok':d.status==='warn'?'di-warn':'di-miss';
+    const scls = d.status==='ok'?'ds-ok':d.status==='warn'?'ds-warn':'ds-miss';
+    const label = d.status==='ok'?'Received':d.status==='warn'?'Incomplete':'Missing';
+    const icon  = d.status==='ok'?'✓':d.status==='warn'?'⚠':'✗';
+    return `<div class="doc-row">
+      <div class="doc-icon ${icls}">${icon}</div>
+      <div class="doc-name">${d.name}</div>
+      <span class="doc-status ${scls}">${label}</span>
+      <span class="doc-note">${d.note}</span>
+    </div>`;
+  }).join('');
+
+  // timeline
+  const tlHtml = app.timeline.map(t => `
+    <div class="tl-item">
+      <div class="tl-dot" style="background:${t.color}"></div>
+      <div class="tl-body"><strong>${t.text}</strong><p>${t.sub}</p></div>
+      <div class="tl-time">${t.time}</div>
+    </div>`).join('');
+
+  // missing docs warning
+  const missingDocs = app.docs.filter(d => d.status !== 'ok');
+  const docsWarning = missingDocs.length ? `
+    <div class="flag-item flag-docs-item" style="margin-bottom:4px">
+      <div class="flag-icon">⚠</div>
+      <div class="flag-content">
+        <div class="flag-title">${missingDocs.length} document issue${missingDocs.length>1?'s':''}</div>
+        <div class="flag-desc">${missingDocs.map(d=>d.name).join(', ')}</div>
+      </div>
+    </div>` : '';
+
+  document.getElementById('main-body').innerHTML = `
+    <div class="card">
+      <div class="card-title">Applicant Data <span class="ct-badge">${app.type}</span></div>
+      <div class="data-grid">${gridHtml}</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">AI Score Factors <span class="ct-badge">SHAP contribution</span></div>
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:14px;padding:0 2px;">
+        <span style="font-size:11px;color:var(--muted)">Impact key:</span>
+        <span style="font-size:11px;color:var(--green)">■ positive</span>
+        <span style="font-size:11px;color:var(--red)">■ negative</span>
+        <span style="font-size:10px;font-family:'IBM Plex Mono',monospace;color:var(--muted);margin-left:auto">Score: ${app.score}/100</span>
+      </div>
+      ${factorHtml}
+    </div>
+
+    <div class="card">
+      <div class="card-title">Document Checklist ${docsWarning?'<span class="ct-badge" style="background:var(--amber-bg);color:var(--amber)">Action needed</span>':''}</div>
+      ${docsWarning}
+      ${docHtml}
+    </div>
+
+    <div class="card">
+      <div class="card-title">Underwriter Notes</div>
+      <textarea class="notes-area" placeholder="Add your review notes here…" id="uw-notes"></textarea>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Application Timeline</div>
+      ${tlHtml}
+    </div>
+  `;
+
+  // animate factor bars
+  setTimeout(() => {
+    document.querySelectorAll('.factor-fill').forEach(el => {
+      const w = el.style.width;
+      el.style.width = '0';
+      setTimeout(() => { el.style.width = w; }, 50);
+    });
+  }, 30);
+}
+
+/* ─── AI PANEL ─────────────────────────────────────── */
+function renderAiPanel(app) {
+  const vCls = app.aiVerdict==='approve'?'vb-approve':app.aiVerdict==='refer'?'vb-refer':'vb-decline';
+  const vLabel = app.aiVerdict==='approve'?'RECOMMEND APPROVE':app.aiVerdict==='refer'?'REFER FOR REVIEW':'RECOMMEND DECLINE';
+  const vColor = app.aiVerdict==='approve'?'var(--green)':app.aiVerdict==='refer'?'var(--amber)':'var(--red)';
+
+  const circ = 2 * Math.PI * 24;
+  const offset = circ - (app.score / 100) * circ;
+
+  // SHAP bars
+  const shapHtml = app.factors.map(f => {
+    const absImpact = parseFloat(f.impact.replace('+','').replace('-',''));
+    const pct = Math.min(100, (absImpact / 20) * 100);
+    const barColor = f.dir==='pos'?'var(--green)':f.dir==='neg'?'var(--red)':'var(--muted)';
+    return `<div class="shap-row">
+      <div class="shap-label">${f.label}</div>
+      <div class="shap-bar-track"><div class="shap-bar-fill" style="width:${pct}%;background:${barColor}"></div></div>
+      <div class="shap-val" style="color:${barColor}">${f.impact}</div>
+    </div>`;
+  }).join('');
+
+  // flags
+  let flagsHtml = '';
+  if (app.flags.includes('fraud')) {
+    flagsHtml += `<div class="flag-item flag-fraud-item">
+      <div class="flag-icon">🚨</div>
+      <div class="flag-content">
+        <div class="flag-title">Fraud Signal Detected</div>
+        <div class="flag-desc">Asset supplier on quote cannot be verified against known Irish suppliers. Manual validation required before approval.</div>
+      </div>
+    </div>`;
+  }
+  if (app.flags.includes('docs')) {
+    flagsHtml += `<div class="flag-item flag-docs-item">
+      <div class="flag-icon">📄</div>
+      <div class="flag-content">
+        <div class="flag-title">Incomplete Documentation</div>
+        <div class="flag-desc">Employment letter and full 6-month bank statements not received. Condition approval recommended.</div>
+      </div>
+    </div>`;
+  }
+  if (!flagsHtml) {
+    flagsHtml = `<div class="flag-item flag-info-item">
+      <div class="flag-icon">✓</div>
+      <div class="flag-content">
+        <div class="flag-title">No Flags Raised</div>
+        <div class="flag-desc">AI found no fraud signals or document exceptions on this application.</div>
+      </div>
+    </div>`;
+  }
+
+  // suggested terms
+  let termsHtml = '';
+  if (app.suggestedRate) {
+    const monthly = Math.round(app.amount * (parseFloat(app.suggestedRate)/100/12) / (1 - Math.pow(1 + parseFloat(app.suggestedRate)/100/12, -app.suggestedTerm)));
+    termsHtml = `
+      <div class="ai-section-title">Suggested Loan Terms</div>
+      <div class="terms-grid">
+        <div class="term-chip"><div class="term-chip-label">Rate (APR)</div><div class="term-chip-val">${app.suggestedRate}%</div></div>
+        <div class="term-chip"><div class="term-chip-label">Term</div><div class="term-chip-val">${app.suggestedTerm} mo</div></div>
+        <div class="term-chip"><div class="term-chip-label">Monthly Pmt</div><div class="term-chip-val">€${monthly.toLocaleString('en-IE')}</div></div>
+        <div class="term-chip"><div class="term-chip-label">Amount</div><div class="term-chip-val">€${app.amount.toLocaleString('en-IE')}</div></div>
+      </div>`;
+  } else {
+    termsHtml = `<div class="ai-section-title">Suggested Loan Terms</div>
+      <div class="flag-item flag-fraud-item"><div class="flag-icon">—</div>
+      <div class="flag-content"><div class="flag-title">No offer generated</div><div class="flag-desc">Application does not meet minimum criteria for a loan offer.</div></div></div>`;
+  }
+
+  document.getElementById('ai-body').innerHTML = `
+    <div class="verdict-block ${vCls}">
+      <div class="verdict-top">
+        <div class="verdict-label" style="color:${vColor}">${vLabel}</div>
+        <div class="verdict-conf">${app.confidence}% conf.</div>
+      </div>
+      <div class="score-row">
+        <div class="donut-wrap">
+          <svg class="donut-svg" viewBox="0 0 60 60">
+            <circle class="donut-bg" cx="30" cy="30" r="24"/>
+            <circle class="donut-arc" cx="30" cy="30" r="24"
+              stroke="${vColor}"
+              stroke-dasharray="${circ}"
+              stroke-dashoffset="${circ}"
+              id="ai-arc"/>
+          </svg>
+          <div class="donut-inner">
+            <div class="donut-num" id="ai-score-num">0</div>
+            <div class="donut-sub">SCORE</div>
+          </div>
+        </div>
+        <div class="score-breakdown">
+          <div class="sb-row"><span class="sb-label">Policy band</span><span class="sb-val">${app.score>=62?'Approve':app.score>=42?'Borderline':'Decline'}</span></div>
+          <div class="sb-row"><span class="sb-label">Min threshold</span><span class="sb-val">62 / 100</span></div>
+          <div class="sb-row"><span class="sb-label">Model version</span><span class="sb-val">v3.1.4</span></div>
+          <div class="sb-row"><span class="sb-label">Processing time</span><span class="sb-val">1.8s</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ai-section-title">AI Reasoning</div>
+    <div class="reasoning-block">${app.reasoning}</div>
+
+    <div class="ai-section-title">SHAP Feature Impact</div>
+    ${shapHtml}
+
+    <div class="ai-section-title">Flags & Alerts</div>
+    ${flagsHtml}
+
+    ${termsHtml}
+
+    <div style="margin-top:14px;padding:10px 12px;background:var(--canvas);border-radius:var(--r);border:1px solid var(--border2)">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:3px">CPC COMPLIANCE NOTE</div>
+      <div style="font-size:11px;color:var(--muted);line-height:1.5">${
+        app.aiVerdict==='decline'
+        ? 'Consumer Protection Code §9 adverse notice required. AI decision logged to audit trail ref: ' + app.id + '-AUD.'
+        : app.aiVerdict==='refer'
+        ? 'Decision deferred to senior underwriter. Full rationale logged to audit trail ref: ' + app.id + '-AUD.'
+        : 'Decision rationale logged to audit trail ref: ' + app.id + '-AUD. Offer letter template ready.'
+      }</div>
+    </div>
+  `;
+
+  // animate donut
+  setTimeout(() => {
+    document.getElementById('ai-arc').style.strokeDashoffset = offset;
+    animCount('ai-score-num', 0, app.score, 900);
+  }, 80);
+}
+
+/* ─── MODAL ─────────────────────────────────────────── */
+function openModal(type) {
+  if (!activeId) return;
+  const app = APPS.find(a => a.id === activeId);
+  pendingDecision = type;
+
+  const cfg = {
+    approve: { icon: '✅', title: 'Approve Application', sub: `Approve €${app.amount.toLocaleString('en-IE')} for ${app.name}`, btnCls: 'btn-approve', btnLabel: 'Confirm Approval' },
+    refer:   { icon: '🔍', title: 'Refer for Senior Review', sub: `Send ${app.name} to senior underwriter queue`, btnCls: 'btn-refer', btnLabel: 'Send to Senior Review' },
+    decline: { icon: '⛔', title: 'Decline Application', sub: `Decline ${app.name} — CPC adverse notice will be generated`, btnCls: 'btn-decline', btnLabel: 'Confirm Decline' },
+  }[type];
+
+  document.getElementById('modal-title').textContent = cfg.title;
+  document.getElementById('modal-body').innerHTML = `
+    <div class="modal-dec-icon">${cfg.icon}</div>
+    <div class="modal-dec-title">${cfg.title}</div>
+    <div class="modal-dec-sub">${cfg.sub}</div>
+    <div class="modal-field">
+      <div class="modal-label">Underwriter Rationale</div>
+      <textarea class="modal-textarea" id="modal-reason" placeholder="Required: summarise your decision rationale for the audit log…"></textarea>
+    </div>
+    ${type==='approve'?`
+    <div class="modal-field">
+      <div class="modal-label">Approved Rate (APR %)</div>
+      <input class="modal-input" type="number" value="${app.suggestedRate||''}" id="modal-rate" placeholder="e.g. 6.9"/>
+    </div>`:''}
+  `;
+
+  const btn = document.getElementById('modal-confirm');
+  btn.className = 'btn ' + cfg.btnCls;
+  btn.textContent = cfg.btnLabel;
+  document.getElementById('modal-overlay').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('show');
+  pendingDecision = null;
+}
+
+function confirmDecision() {
+  const reason = document.getElementById('modal-reason')?.value?.trim();
+  if (!reason) {
+    document.getElementById('modal-reason').style.borderColor = 'var(--red)';
+    return;
+  }
+  closeModal();
+
+  const app = APPS.find(a => a.id === activeId);
+  if (app) {
+    app.status = pendingDecision === 'refer' ? 'refer' : pendingDecision;
+    // remove from view
+    const idx = APPS.findIndex(a => a.id === activeId);
+    APPS.splice(idx, 1);
+    activeId = null;
+    renderQueue();
+    document.getElementById('app-view').style.display = 'none';
+    document.getElementById('empty-state').style.display = 'flex';
+  }
+
+  const labels = { approve:'✅ Application approved and logged.', refer:'↗ Referred to senior underwriter.', decline:'⛔ Application declined. CPC notice queued.' };
+  showToast(labels[pendingDecision]);
+}
+
+/* ─── HELPERS ─────────────────────────────────────────── */
+function animCount(id, from, to, dur) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const start = performance.now();
+  function step(now) {
+    const p = Math.min(1, (now-start)/dur);
+    const e = 1 - Math.pow(1-p, 3);
+    el.textContent = Math.round(from + (to-from)*e);
+    if (p < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+/* ─── INIT ─────────────────────────────────────────────── */
+renderQueue();
+// auto-select first
+setTimeout(() => selectApp('FP-9041'), 200);
+</script>
+</body>
+</html>
