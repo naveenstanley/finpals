@@ -1,1272 +1,1366 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Finpal · Underwriter Workstation</title>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Sans+Condensed:wght@600;700&display=swap" rel="stylesheet"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FinPal — Credit Intelligence Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <style>
-/* ═══════════════════════════════════════════════
-   TOKENS
-═══════════════════════════════════════════════ */
-:root {
-  --bg:       #f4f3f0;
-  --canvas:   #eceae5;
-  --white:    #ffffff;
-  --panel:    #fafaf8;
-  --border:   #dddbd5;
-  --border2:  #e8e6e0;
-  --ink:      #1a1916;
-  --ink2:     #3d3b36;
-  --muted:    #7a7870;
-  --faint:    #b0ae a8;
-
-  --green:    #1a7a4a;
-  --green-bg: #edf7f2;
-  --green-bd: #b3dfc8;
-
-  --amber:    #8a5c00;
-  --amber-bg: #fdf5e6;
-  --amber-bd: #f0d08a;
-
-  --red:      #b91c3a;
-  --red-bg:   #fef0f3;
-  --red-bd:   #f5b8c4;
-
-  --blue:     #1251a3;
-  --blue-bg:  #eff4fd;
-  --blue-bd:  #b3caf5;
-
-  --orange:   #c45a00;
-
-  --accent:   #1a7a4a;
-  --r:        6px;
-  --r-lg:     10px;
-}
-
-/* ═══════════════════════════════════════════════
-   RESET
-═══════════════════════════════════════════════ */
+/* ── Reset & Root ─────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; overflow: hidden; }
-body {
-  font-family: 'IBM Plex Sans', sans-serif;
-  background: var(--canvas);
-  color: var(--ink);
-  font-size: 13px;
-  line-height: 1.5;
+
+:root {
+  --navy:       #0B1F3A;
+  --navy-mid:   #0E2D52;
+  --navy-dark:  #061426;
+  --teal:       #00A896;
+  --teal-dark:  #007A6E;
+  --teal-glow:  rgba(0,168,150,.18);
+  --ice:        #F0F6FA;
+  --white:      #FFFFFF;
+  --slate:      #334E68;
+  --muted:      #7A94AC;
+  --gold:       #F5A623;
+  --red:        #E84C4C;
+  --green:      #2ECC71;
+  --bg:         #07182E;
+  --panel:      #0C2240;
+  --border:     rgba(0,168,150,.2);
+  --font-head:  'Syne', sans-serif;
+  --font-mono:  'DM Mono', monospace;
+  --font-body:  'DM Sans', sans-serif;
+  --r:          6px;
+  --r-lg:       10px;
 }
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--white);
+  font-family: var(--font-body);
+  font-size: 14px;
+  overflow: hidden;
+}
+
+/* ── Scrollbar ────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: var(--navy-mid); border-radius: 99px; }
 
-/* ═══════════════════════════════════════════════
-   LAYOUT
-═══════════════════════════════════════════════ */
-.shell {
-  display: grid;
-  grid-template-rows: 44px 1fr;
-  grid-template-columns: 260px 1fr 320px;
-  grid-template-areas:
-    "topbar topbar topbar"
-    "queue  main   ai";
-  height: 100vh;
-}
+/* ── Layout ───────────────────────────────────────────────────── */
+#app { display: flex; height: 100vh; overflow: hidden; }
 
-/* ═══════════════════════════════════════════════
-   TOPBAR
-═══════════════════════════════════════════════ */
-.topbar {
-  grid-area: topbar;
-  background: var(--ink);
-  display: flex; align-items: center;
-  padding: 0 16px; gap: 0;
-  border-bottom: 1px solid #2e2c28;
-}
-.tb-logo {
-  font-family: 'IBM Plex Sans Condensed', sans-serif;
-  font-weight: 700; font-size: 15px; color: #fff;
-  letter-spacing: .01em; padding-right: 20px;
-  border-right: 1px solid #2e2c28; margin-right: 20px;
-}
-.tb-logo span { color: #4eca84; }
-.tb-nav-item {
-  font-size: 12px; color: #9a9890; padding: 0 14px; height: 44px;
-  display: flex; align-items: center; cursor: pointer;
-  border-bottom: 2px solid transparent;
-  transition: color .15s;
-}
-.tb-nav-item.active { color: #fff; border-bottom-color: #4eca84; }
-.tb-nav-item:hover:not(.active) { color: #ccc; }
-.tb-spacer { flex: 1; }
-.tb-badge {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 10px; padding: 3px 10px;
-  background: rgba(78,202,132,.15); color: #4eca84;
-  border: 1px solid rgba(78,202,132,.3); border-radius: 3px;
-  margin-right: 14px;
-}
-.tb-user {
-  display: flex; align-items: center; gap: 8px;
-  font-size: 12px; color: #9a9890;
-}
-.tb-avatar {
-  width: 26px; height: 26px; border-radius: 50%;
-  background: #2e6b4a; display: flex; align-items: center; justify-content: center;
-  font-size: 10px; font-weight: 600; color: #4eca84;
-}
-
-/* ═══════════════════════════════════════════════
-   QUEUE (left)
-═══════════════════════════════════════════════ */
-.queue {
-  grid-area: queue;
-  background: var(--white);
+/* ── Sidebar ──────────────────────────────────────────────────── */
+#sidebar {
+  width: 220px;
+  min-width: 220px;
+  background: var(--navy-dark);
   border-right: 1px solid var(--border);
-  display: flex; flex-direction: column;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
 }
-.queue-header {
-  padding: 12px 14px 10px;
-  border-bottom: 1px solid var(--border2);
-  flex-shrink: 0;
-}
-.queue-title {
-  font-family: 'IBM Plex Sans Condensed', sans-serif;
-  font-weight: 700; font-size: 11px;
-  text-transform: uppercase; letter-spacing: .08em; color: var(--muted);
-  margin-bottom: 8px;
-}
-.queue-filters {
-  display: flex; gap: 4px; flex-wrap: wrap;
-}
-.q-filter {
-  font-size: 11px; padding: 3px 9px; border-radius: 3px;
-  border: 1px solid var(--border); background: transparent;
-  color: var(--muted); cursor: pointer; transition: all .12s;
-  font-family: 'IBM Plex Sans', sans-serif;
-}
-.q-filter.on { background: var(--ink); color: #fff; border-color: var(--ink); }
-.q-filter:hover:not(.on) { background: var(--canvas); }
 
-.queue-list { overflow-y: auto; flex: 1; }
-.q-item {
-  padding: 11px 14px; cursor: pointer;
-  border-bottom: 1px solid var(--border2);
-  transition: background .12s;
-  position: relative;
-}
-.q-item:hover { background: var(--canvas); }
-.q-item.selected { background: #edf7f2; border-left: 3px solid var(--green); }
-.q-item.selected .q-ref { color: var(--green); }
-.q-item-top {
-  display: flex; justify-content: space-between; align-items: flex-start;
-  margin-bottom: 4px;
-}
-.q-name {
-  font-weight: 600; font-size: 12.5px; color: var(--ink);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  max-width: 140px;
-}
-.q-amount {
-  font-family: 'IBM Plex Mono', monospace; font-size: 11px;
-  color: var(--ink2); flex-shrink: 0;
-}
-.q-item-mid {
-  display: flex; justify-content: space-between;
-  margin-bottom: 5px;
-}
-.q-ref {
-  font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted);
-}
-.q-type { font-size: 10px; color: var(--muted); }
-.q-item-bot { display: flex; justify-content: space-between; align-items: center; }
-
-.q-score-wrap { display: flex; align-items: center; gap: 5px; }
-.q-score-bar {
-  width: 52px; height: 4px; background: var(--border);
-  border-radius: 2px; overflow: hidden;
-}
-.q-score-fill { height: 100%; border-radius: 2px; }
-.q-score-num {
-  font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--ink2);
-}
-
-.q-status {
-  font-size: 10px; padding: 2px 7px; border-radius: 3px;
-  font-family: 'IBM Plex Mono', monospace;
-}
-.qs-approve { background: var(--green-bg); color: var(--green); }
-.qs-refer   { background: var(--amber-bg); color: var(--amber); }
-.qs-decline { background: var(--red-bg);   color: var(--red);   }
-.qs-pending { background: var(--blue-bg);  color: var(--blue);  }
-
-.q-flag {
-  position: absolute; top: 10px; right: 10px;
-  width: 7px; height: 7px; border-radius: 50%;
-}
-.flag-fraud { background: var(--red); }
-.flag-docs  { background: var(--amber); }
-
-/* ═══════════════════════════════════════════════
-   MAIN PANEL
-═══════════════════════════════════════════════ */
-.main {
-  grid-area: main;
-  background: var(--bg);
-  overflow-y: auto;
-  display: flex; flex-direction: column;
-}
-.main-header {
-  background: var(--white);
+.logo {
+  padding: 22px 18px 16px;
   border-bottom: 1px solid var(--border);
-  padding: 14px 20px;
+  display: flex; align-items: center; gap: 10px;
+}
+.logo-mark {
+  width: 32px; height: 32px;
+  background: var(--teal);
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-head);
+  font-weight: 800; font-size: 16px; color: var(--navy-dark);
   flex-shrink: 0;
-  display: flex; align-items: flex-start; justify-content: space-between;
-  gap: 12px;
 }
-.mh-left {}
-.mh-name {
-  font-family: 'IBM Plex Sans Condensed', sans-serif;
-  font-weight: 700; font-size: 20px; color: var(--ink);
-  margin-bottom: 3px;
+.logo-text {
+  font-family: var(--font-head);
+  font-weight: 700; font-size: 18px; color: var(--white);
+  letter-spacing: -0.3px;
 }
-.mh-meta {
-  display: flex; gap: 14px; flex-wrap: wrap;
+.logo-tag {
+  font-size: 9px; color: var(--teal); font-family: var(--font-mono);
+  letter-spacing: .5px; margin-top: 1px;
 }
-.mh-meta-item {
-  font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted);
+
+.nav-section { padding: 14px 10px 6px; }
+.nav-label {
+  font-size: 9px; color: var(--muted); font-family: var(--font-mono);
+  letter-spacing: 1px; text-transform: uppercase;
+  padding: 0 8px 6px;
 }
-.mh-meta-item span { color: var(--ink2); }
-.mh-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+.nav-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 10px; border-radius: var(--r);
+  cursor: pointer; color: var(--muted);
+  font-size: 13px; transition: all .15s;
+  user-select: none;
+}
+.nav-item:hover { background: var(--teal-glow); color: var(--white); }
+.nav-item.active { background: var(--teal-glow); color: var(--teal); }
+.nav-item .icon { font-size: 15px; width: 18px; text-align: center; }
+.nav-badge {
+  margin-left: auto; background: var(--teal); color: var(--navy-dark);
+  font-size: 10px; font-weight: 700; padding: 1px 6px;
+  border-radius: 99px; font-family: var(--font-mono);
+}
+
+/* App list in sidebar */
+.app-list { flex: 1; overflow-y: auto; padding: 10px; }
+.app-card {
+  padding: 10px 10px 8px; border-radius: var(--r);
+  border: 1px solid transparent; margin-bottom: 6px;
+  cursor: pointer; transition: all .15s;
+  position: relative; overflow: hidden;
+}
+.app-card::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+  width: 3px; background: transparent; border-radius: 99px 0 0 99px;
+  transition: background .15s;
+}
+.app-card:hover { background: var(--teal-glow); border-color: var(--border); }
+.app-card:hover::before { background: var(--teal); }
+.app-card.active { background: var(--navy-mid); border-color: var(--border); }
+.app-card.active::before { background: var(--teal); }
+.app-card-name {
+  font-weight: 500; font-size: 13px; color: var(--white); margin-bottom: 3px;
+}
+.app-card-meta {
+  font-size: 11px; color: var(--muted); font-family: var(--font-mono);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.status-dot {
+  width: 6px; height: 6px; border-radius: 50%; display: inline-block;
+  margin-right: 4px;
+}
+.dot-green { background: var(--green); box-shadow: 0 0 4px var(--green); }
+.dot-yellow { background: var(--gold); }
+.dot-teal { background: var(--teal); animation: pulse 1.5s ease-in-out infinite; }
+.dot-grey { background: var(--muted); }
+
+@keyframes pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(0,168,150,.4); }
+  50%      { box-shadow: 0 0 0 4px rgba(0,168,150,0); }
+}
+
+/* ── Main ─────────────────────────────────────────────────────── */
+#main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+/* ── Topbar ───────────────────────────────────────────────────── */
+#topbar {
+  height: 56px; min-height: 56px;
+  background: var(--navy-dark);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 24px;
+  gap: 16px;
+}
+.topbar-title {
+  font-family: var(--font-head);
+  font-size: 16px; font-weight: 700; color: var(--white);
+  flex: 1;
+}
+.topbar-subtitle { font-size: 12px; color: var(--muted); font-family: var(--font-mono); }
+.topbar-actions { display: flex; gap: 8px; }
 .btn {
-  font-family: 'IBM Plex Sans', sans-serif; font-weight: 500; font-size: 12px;
-  padding: 7px 16px; border-radius: var(--r); cursor: pointer; border: none;
-  transition: all .14s; display: flex; align-items: center; gap: 6px;
+  padding: 7px 16px; border-radius: var(--r); border: none;
+  font-family: var(--font-body); font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: all .15s; display: flex; align-items: center; gap: 6px;
 }
-.btn-approve { background: var(--green); color: #fff; }
-.btn-approve:hover { background: #15663e; }
-.btn-refer   { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-bd); }
-.btn-refer:hover { background: #fdecc8; }
-.btn-decline { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-bd); }
-.btn-decline:hover { background: #fcd8df; }
-.btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
-.btn-ghost:hover { background: var(--canvas); color: var(--ink); }
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+.btn-outline:hover { border-color: var(--teal); color: var(--teal); }
+.btn-primary {
+  background: var(--teal); color: var(--navy-dark);
+  font-weight: 700;
+}
+.btn-primary:hover { background: #00bfad; }
+.btn-danger {
+  background: transparent; border: 1px solid rgba(232,76,76,.4);
+  color: var(--red);
+}
+.btn-danger:hover { background: rgba(232,76,76,.1); }
+.btn:disabled { opacity: .4; pointer-events: none; }
 
-.main-body { padding: 16px 20px; flex: 1; }
+/* ── Content area ─────────────────────────────────────────────── */
+#content { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
 
-/* cards */
+/* ── Application header ───────────────────────────────────────── */
+#app-header {
+  padding: 18px 24px 0;
+  border-bottom: 1px solid var(--border);
+}
+.app-meta-row {
+  display: flex; align-items: flex-start; gap: 20px; margin-bottom: 14px;
+}
+.app-company { font-family: var(--font-head); font-size: 24px; font-weight: 700; }
+.app-ref { font-family: var(--font-mono); font-size: 11px; color: var(--muted); margin-top: 2px; }
+.meta-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+.chip {
+  padding: 3px 10px; border-radius: 99px; font-size: 11px;
+  font-family: var(--font-mono); border: 1px solid var(--border);
+  color: var(--muted);
+}
+.chip-teal { background: var(--teal-glow); color: var(--teal); border-color: rgba(0,168,150,.3); }
+.chip-gold { background: rgba(245,166,35,.1); color: var(--gold); border-color: rgba(245,166,35,.3); }
+.chip-red  { background: rgba(232,76,76,.1); color: var(--red); border-color: rgba(232,76,76,.3); }
+.chip-green{ background: rgba(46,204,113,.1); color: var(--green); border-color: rgba(46,204,113,.3); }
+
+/* ── Tabs ─────────────────────────────────────────────────────── */
+.tabs { display: flex; gap: 0; margin-top: 4px; }
+.tab {
+  padding: 10px 18px; font-size: 13px; color: var(--muted);
+  border-bottom: 2px solid transparent; cursor: pointer;
+  transition: all .15s; user-select: none; white-space: nowrap;
+}
+.tab:hover { color: var(--white); }
+.tab.active { color: var(--teal); border-bottom-color: var(--teal); }
+.tab-alert { color: var(--gold) !important; }
+.tab-alert::after { content: ' ⚑'; font-size: 11px; }
+
+/* ── Tab panels ───────────────────────────────────────────────── */
+.panel { display: none; flex: 1; overflow-y: auto; padding: 20px 24px 24px; }
+.panel.active { display: block; }
+
+/* ── Grid layouts ─────────────────────────────────────────────── */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+.grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; }
+
+/* ── Cards ────────────────────────────────────────────────────── */
 .card {
-  background: var(--white); border: 1px solid var(--border);
-  border-radius: var(--r-lg); padding: 16px 18px;
-  margin-bottom: 12px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 16px;
 }
 .card-title {
-  font-family: 'IBM Plex Sans Condensed', sans-serif;
-  font-weight: 700; font-size: 11px;
-  text-transform: uppercase; letter-spacing: .07em; color: var(--muted);
-  margin-bottom: 12px; display: flex; align-items: center; gap: 6px;
-}
-.card-title .ct-badge {
-  font-size: 10px; padding: 1px 7px; border-radius: 2px;
-  background: var(--canvas); color: var(--muted);
-  font-family: 'IBM Plex Mono', monospace;
-}
-
-.data-grid {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
-  background: var(--border2); border-radius: var(--r); overflow: hidden;
-  margin-bottom: 0;
-}
-.data-cell {
-  background: var(--panel); padding: 10px 14px;
-}
-.data-cell-label {
-  font-family: 'IBM Plex Mono', monospace; font-size: 10px;
-  color: var(--muted); text-transform: uppercase; letter-spacing: .05em;
-  margin-bottom: 3px;
-}
-.data-cell-val {
-  font-family: 'IBM Plex Sans Condensed', sans-serif;
-  font-weight: 600; font-size: 15px; color: var(--ink);
-}
-.data-cell-val.good { color: var(--green); }
-.data-cell-val.warn { color: var(--amber); }
-.data-cell-val.bad  { color: var(--red);   }
-.data-cell-sub { font-size: 10px; color: var(--muted); margin-top: 1px; }
-
-/* factor bars */
-.factor-row {
-  display: flex; align-items: center; gap: 10px;
-  padding: 7px 0; border-bottom: 1px solid var(--border2);
-}
-.factor-row:last-child { border-bottom: none; }
-.factor-label { width: 130px; font-size: 12px; color: var(--ink2); flex-shrink: 0; }
-.factor-track {
-  flex: 1; height: 6px; background: var(--border);
-  border-radius: 3px; overflow: hidden;
-}
-.factor-fill { height: 100%; border-radius: 3px; transition: width .8s cubic-bezier(.4,0,.2,1); }
-.factor-val {
-  width: 48px; text-align: right;
-  font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--ink2);
-}
-.factor-impact {
-  width: 52px; text-align: right;
-  font-family: 'IBM Plex Mono', monospace; font-size: 10px; flex-shrink: 0;
-}
-.fi-pos { color: var(--green); }
-.fi-neg { color: var(--red); }
-.fi-neu { color: var(--muted); }
-
-/* doc checklist */
-.doc-row {
-  display: flex; align-items: center; gap: 10px;
-  padding: 8px 0; border-bottom: 1px solid var(--border2);
-}
-.doc-row:last-child { border-bottom: none; }
-.doc-icon { width: 26px; height: 26px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; }
-.di-ok   { background: var(--green-bg); }
-.di-warn { background: var(--amber-bg); }
-.di-miss { background: var(--red-bg); }
-.doc-name { flex: 1; font-size: 12px; color: var(--ink2); }
-.doc-status { font-size: 11px; padding: 2px 8px; border-radius: 3px; font-family: 'IBM Plex Mono', monospace; }
-.ds-ok   { background: var(--green-bg); color: var(--green); }
-.ds-warn { background: var(--amber-bg); color: var(--amber); }
-.ds-miss { background: var(--red-bg);   color: var(--red);   }
-.doc-note { font-size: 10px; color: var(--muted); margin-left: 4px; }
-
-/* notes area */
-.notes-area {
-  width: 100%; min-height: 72px; resize: vertical;
-  border: 1px solid var(--border); border-radius: var(--r);
-  padding: 10px 12px; font-family: 'IBM Plex Sans', sans-serif;
-  font-size: 12.5px; color: var(--ink); background: var(--panel);
-  outline: none; transition: border-color .15s;
-}
-.notes-area:focus { border-color: var(--green); }
-
-/* timeline */
-.tl-item {
-  display: flex; gap: 10px; padding: 7px 0;
-  border-bottom: 1px solid var(--border2);
-}
-.tl-item:last-child { border-bottom: none; }
-.tl-dot {
-  width: 7px; height: 7px; border-radius: 50%;
-  margin-top: 5px; flex-shrink: 0;
-}
-.tl-body { flex: 1; }
-.tl-body strong { font-weight: 600; font-size: 12px; color: var(--ink); }
-.tl-body p { font-size: 11px; color: var(--muted); margin-top: 1px; }
-.tl-time { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted); flex-shrink: 0; }
-
-/* ═══════════════════════════════════════════════
-   AI PANEL (right)
-═══════════════════════════════════════════════ */
-.ai-panel {
-  grid-area: ai;
-  background: var(--white);
-  border-left: 1px solid var(--border);
-  display: flex; flex-direction: column;
-  overflow: hidden;
-}
-.ai-header {
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--border2);
-  flex-shrink: 0; display: flex; align-items: center; gap: 8px;
-}
-.ai-header-title {
-  font-family: 'IBM Plex Sans Condensed', sans-serif;
-  font-weight: 700; font-size: 12px; color: var(--ink);
-  text-transform: uppercase; letter-spacing: .05em;
-}
-.ai-live-dot {
-  width: 7px; height: 7px; border-radius: 50%; background: #4eca84;
-  animation: pulse-green 1.8s ease-in-out infinite; margin-left: auto;
-}
-@keyframes pulse-green {
-  0%,100% { box-shadow: 0 0 0 0 rgba(78,202,132,.5); }
-  50%      { box-shadow: 0 0 0 5px rgba(78,202,132,0); }
-}
-.ai-model-tag {
-  font-family: 'IBM Plex Mono', monospace; font-size: 10px;
-  color: var(--muted); margin-left: 4px;
-}
-
-.ai-body { flex: 1; overflow-y: auto; padding: 14px; }
-
-/* verdict */
-.verdict-block {
-  border-radius: var(--r-lg); padding: 14px 16px; margin-bottom: 14px;
-  border: 1px solid;
-}
-.vb-approve { background: var(--green-bg); border-color: var(--green-bd); }
-.vb-refer   { background: var(--amber-bg); border-color: var(--amber-bd); }
-.vb-decline { background: var(--red-bg);   border-color: var(--red-bd);   }
-
-.verdict-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-.verdict-label {
-  font-family: 'IBM Plex Sans Condensed', sans-serif; font-weight: 700; font-size: 14px;
-}
-.verdict-conf {
-  font-family: 'IBM Plex Mono', monospace; font-size: 11px;
-  background: rgba(0,0,0,.06); padding: 2px 8px; border-radius: 3px;
-}
-
-/* score donut */
-.score-row { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
-.donut-wrap { position: relative; width: 64px; height: 64px; flex-shrink: 0; }
-.donut-svg { width: 64px; height: 64px; transform: rotate(-90deg); }
-.donut-bg   { fill: none; stroke: rgba(0,0,0,.08); stroke-width: 7; }
-.donut-arc  { fill: none; stroke-width: 7; stroke-linecap: round; transition: stroke-dashoffset .9s cubic-bezier(.4,0,.2,1); }
-.donut-inner {
-  position: absolute; inset: 0; display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-}
-.donut-num {
-  font-family: 'IBM Plex Sans Condensed', sans-serif; font-weight: 700; font-size: 16px; color: var(--ink);
-  line-height: 1;
-}
-.donut-sub { font-size: 8px; color: var(--muted); font-family: 'IBM Plex Mono', monospace; }
-.score-breakdown { flex: 1; }
-.sb-row {
-  display: flex; justify-content: space-between; align-items: center;
-  font-size: 11px; padding: 2px 0;
-}
-.sb-label { color: var(--muted); }
-.sb-val { font-family: 'IBM Plex Mono', monospace; color: var(--ink2); }
-
-/* reasoning */
-.ai-section-title {
-  font-family: 'IBM Plex Mono', monospace; font-size: 10px;
-  text-transform: uppercase; letter-spacing: .08em; color: var(--muted);
-  margin: 14px 0 8px;
-}
-.reasoning-block {
-  background: var(--panel); border: 1px solid var(--border2);
-  border-radius: var(--r); padding: 11px 13px;
-  font-size: 12px; color: var(--ink2); line-height: 1.65;
-  margin-bottom: 10px;
-}
-
-/* flags */
-.flag-item {
-  display: flex; gap: 10px; align-items: flex-start;
-  padding: 9px 12px; border-radius: var(--r); margin-bottom: 7px;
-  border: 1px solid;
-}
-.flag-fraud-item { background: var(--red-bg); border-color: var(--red-bd); }
-.flag-docs-item  { background: var(--amber-bg); border-color: var(--amber-bd); }
-.flag-info-item  { background: var(--blue-bg); border-color: var(--blue-bd); }
-.flag-icon { font-size: 13px; flex-shrink: 0; margin-top: 1px; }
-.flag-content {}
-.flag-title { font-weight: 600; font-size: 12px; color: var(--ink); margin-bottom: 2px; }
-.flag-desc  { font-size: 11px; color: var(--muted); line-height: 1.5; }
-
-/* ai shap mini bars */
-.shap-row {
-  display: flex; align-items: center; gap: 8px; margin-bottom: 5px;
-}
-.shap-label { font-size: 11px; color: var(--ink2); width: 110px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.shap-bar-track { flex: 1; height: 8px; border-radius: 2px; background: var(--border); overflow: hidden; position: relative; }
-.shap-bar-fill { height: 100%; border-radius: 2px; }
-.shap-val { font-family: 'IBM Plex Mono', monospace; font-size: 10px; width: 32px; text-align: right; }
-
-/* suggested terms */
-.terms-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
-.term-chip {
-  background: var(--canvas); border: 1px solid var(--border);
-  border-radius: var(--r); padding: 8px 10px;
-}
-.term-chip-label { font-size: 10px; color: var(--muted); font-family: 'IBM Plex Mono', monospace; text-transform: uppercase; }
-.term-chip-val { font-family: 'IBM Plex Sans Condensed', sans-serif; font-weight: 700; font-size: 14px; color: var(--ink); margin-top: 2px; }
-
-/* ═══════════════════════════════════════════════
-   DECISION MODAL
-═══════════════════════════════════════════════ */
-.modal-overlay {
-  display: none; position: fixed; inset: 0;
-  background: rgba(26,25,22,.5); z-index: 200;
-  align-items: center; justify-content: center;
-}
-.modal-overlay.show { display: flex; }
-.modal {
-  background: var(--white); border-radius: var(--r-lg);
-  width: 440px; border: 1px solid var(--border);
-  box-shadow: 0 20px 60px rgba(0,0,0,.2);
-  animation: slideUp .25s ease;
-}
-@keyframes slideUp { from { transform: translateY(12px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-.modal-header {
-  padding: 16px 20px; border-bottom: 1px solid var(--border2);
+  font-size: 11px; color: var(--muted); font-family: var(--font-mono);
+  letter-spacing: .6px; text-transform: uppercase; margin-bottom: 10px;
   display: flex; align-items: center; justify-content: space-between;
 }
-.modal-title { font-family: 'IBM Plex Sans Condensed', sans-serif; font-weight: 700; font-size: 15px; color: var(--ink); }
-.modal-close { cursor: pointer; color: var(--muted); font-size: 18px; background: none; border: none; }
-.modal-body { padding: 20px; }
-.modal-footer { padding: 14px 20px; border-top: 1px solid var(--border2); display: flex; gap: 8px; justify-content: flex-end; }
+.card-value {
+  font-family: var(--font-mono); font-size: 28px; font-weight: 500;
+  color: var(--white);
+}
+.card-value.teal { color: var(--teal); }
+.card-value.gold { color: var(--gold); }
+.card-value.red  { color: var(--red); }
+.card-value.green{ color: var(--green); }
+.card-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
 
-.modal-dec-icon { font-size: 32px; text-align: center; margin-bottom: 12px; }
-.modal-dec-title { font-family: 'IBM Plex Sans Condensed', sans-serif; font-weight: 700; font-size: 17px; text-align: center; margin-bottom: 4px; color: var(--ink); }
-.modal-dec-sub { font-size: 12px; color: var(--muted); text-align: center; margin-bottom: 16px; }
-.modal-field { margin-bottom: 14px; }
-.modal-label { font-size: 11px; color: var(--muted); font-family: 'IBM Plex Mono', monospace; text-transform: uppercase; margin-bottom: 5px; }
-.modal-input {
-  width: 100%; padding: 8px 12px; border: 1px solid var(--border);
-  border-radius: var(--r); font-family: 'IBM Plex Sans', sans-serif;
-  font-size: 13px; color: var(--ink); background: var(--panel); outline: none;
+/* ── Section headers ──────────────────────────────────────────── */
+.section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 12px; margin-top: 20px;
+}
+.section-header:first-child { margin-top: 0; }
+.section-title {
+  font-family: var(--font-head); font-size: 14px; font-weight: 600;
+  color: var(--white); display: flex; align-items: center; gap: 8px;
+}
+.section-title::before {
+  content: ''; width: 3px; height: 14px;
+  background: var(--teal); border-radius: 99px;
+}
+
+/* ── Document items ───────────────────────────────────────────── */
+.doc-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; background: var(--panel);
+  border: 1px solid var(--border); border-radius: var(--r);
+  margin-bottom: 8px;
+}
+.doc-icon {
+  width: 36px; height: 36px; border-radius: 6px;
+  background: var(--navy-mid);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; flex-shrink: 0;
+}
+.doc-name { font-size: 13px; font-weight: 500; color: var(--white); }
+.doc-meta { font-size: 11px; color: var(--muted); font-family: var(--font-mono); margin-top: 2px; }
+.doc-status { margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 12px; }
+
+/* ── Progress bar ─────────────────────────────────────────────── */
+.progress-bar {
+  height: 4px; background: var(--navy-mid);
+  border-radius: 99px; overflow: hidden; margin-top: 6px;
+}
+.progress-fill {
+  height: 100%; background: var(--teal);
+  border-radius: 99px; transition: width 1s ease;
+}
+
+/* ── Processing animation ─────────────────────────────────────── */
+.processing-panel {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 40px;
+  text-align: center; min-height: 300px;
+}
+.spinner {
+  width: 52px; height: 52px; border-radius: 50%;
+  border: 3px solid var(--teal-glow);
+  border-top-color: var(--teal);
+  animation: spin .8s linear infinite;
+  margin-bottom: 20px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.step-list { text-align: left; margin-top: 16px; width: 100%; max-width: 380px; }
+.step-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 0; font-size: 13px; color: var(--muted);
+  border-bottom: 1px solid rgba(255,255,255,.05);
+  transition: color .3s;
+}
+.step-item.done { color: var(--white); }
+.step-item.active-step { color: var(--teal); }
+.step-item .step-icon { font-size: 14px; width: 20px; text-align: center; }
+.step-check { color: var(--teal); }
+
+/* ── Transaction table ────────────────────────────────────────── */
+.tx-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.tx-table th {
+  text-align: left; padding: 8px 10px;
+  color: var(--muted); font-family: var(--font-mono);
+  font-size: 10px; letter-spacing: .5px; text-transform: uppercase;
+  border-bottom: 1px solid var(--border); font-weight: 500;
+}
+.tx-table td {
+  padding: 9px 10px; border-bottom: 1px solid rgba(255,255,255,.04);
+  color: var(--white);
+}
+.tx-table tr:last-child td { border-bottom: none; }
+.tx-table tr:hover td { background: rgba(255,255,255,.02); }
+.amount-in  { color: var(--green); font-family: var(--font-mono); }
+.amount-out { color: var(--red);   font-family: var(--font-mono); }
+.amount-neutral { font-family: var(--font-mono); }
+.tx-cat {
+  padding: 2px 8px; border-radius: 99px; font-size: 10px;
+  font-family: var(--font-mono); background: var(--navy-mid); color: var(--muted);
+}
+
+/* ── Metric rows ──────────────────────────────────────────────── */
+.metric-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,.05);
+}
+.metric-row:last-child { border-bottom: none; }
+.metric-label { font-size: 13px; color: var(--muted); }
+.metric-value {
+  font-family: var(--font-mono); font-size: 14px; font-weight: 500; color: var(--white);
+}
+
+/* ── Discrepancy flag ─────────────────────────────────────────── */
+.flag-box {
+  background: rgba(245,166,35,.08);
+  border: 1px solid rgba(245,166,35,.35);
+  border-radius: var(--r); padding: 14px 16px; margin-top: 12px;
+}
+.flag-box.red { background: rgba(232,76,76,.08); border-color: rgba(232,76,76,.35); }
+.flag-box.green { background: rgba(46,204,113,.08); border-color: rgba(46,204,113,.35); }
+.flag-title { font-size: 13px; font-weight: 600; color: var(--gold); margin-bottom: 5px; display: flex; gap: 8px; align-items: center; }
+.flag-box.red .flag-title { color: var(--red); }
+.flag-box.green .flag-title { color: var(--green); }
+.flag-body { font-size: 12px; color: var(--muted); line-height: 1.6; }
+
+/* ── Check items ──────────────────────────────────────────────── */
+.check-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 14px; background: var(--panel);
+  border: 1px solid var(--border); border-radius: var(--r);
+  margin-bottom: 8px; transition: border-color .2s;
+}
+.check-item:hover { border-color: rgba(0,168,150,.3); }
+.check-status-icon { font-size: 18px; margin-top: 1px; flex-shrink: 0; width: 24px; text-align: center; }
+.check-name { font-size: 13px; font-weight: 500; color: var(--white); margin-bottom: 3px; }
+.check-detail { font-size: 12px; color: var(--muted); line-height: 1.5; }
+.check-timestamp { margin-left: auto; font-size: 10px; color: var(--muted); font-family: var(--font-mono); white-space: nowrap; }
+
+/* ── Evidence pack ────────────────────────────────────────────── */
+.evidence-header {
+  background: linear-gradient(135deg, var(--navy-mid) 0%, #0a2040 100%);
+  border: 1px solid var(--border); border-radius: var(--r-lg);
+  padding: 20px 24px; margin-bottom: 16px;
+}
+.evidence-company { font-family: var(--font-head); font-size: 22px; font-weight: 700; }
+.evidence-meta { display: flex; gap: 20px; margin-top: 10px; flex-wrap: wrap; }
+.evidence-meta-item { font-family: var(--font-mono); font-size: 11px; }
+.evidence-meta-label { color: var(--muted); }
+.evidence-meta-value { color: var(--white); }
+
+.narrative-box {
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 16px; margin-bottom: 14px;
+  position: relative;
+}
+.narrative-box::before {
+  content: 'AI SUMMARY'; position: absolute; top: -8px; left: 14px;
+  background: var(--teal); color: var(--navy-dark); font-family: var(--font-mono);
+  font-size: 9px; font-weight: 500; padding: 2px 8px; border-radius: 99px;
+  letter-spacing: .5px;
+}
+.narrative-text { font-size: 13px; line-height: 1.7; color: var(--muted); }
+.narrative-text strong { color: var(--white); font-weight: 500; }
+
+.finding-row {
+  display: flex; align-items: baseline; gap: 10px;
+  padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,.04);
+}
+.finding-row:last-child { border-bottom: none; }
+.finding-label { font-size: 12px; color: var(--muted); flex: 1; }
+.finding-value { font-family: var(--font-mono); font-size: 13px; color: var(--white); text-align: right; min-width: 80px; }
+.finding-flag { font-size: 11px; padding: 1px 8px; border-radius: 99px; margin-left: 8px; }
+.flag-amber { background: rgba(245,166,35,.15); color: var(--gold); }
+.flag-green { background: rgba(46,204,113,.12); color: var(--green); }
+.flag-red   { background: rgba(232,76,76,.12); color: var(--red); }
+
+/* ── Decision gate ────────────────────────────────────────────── */
+.decision-gate {
+  background: var(--navy-dark);
+  border: 2px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 20px 24px;
+  margin-top: 20px;
+}
+.decision-gate-title {
+  font-family: var(--font-head); font-size: 16px; font-weight: 700;
+  margin-bottom: 6px; display: flex; align-items: center; gap: 8px;
+}
+.decision-gate-sub { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+.decision-buttons { display: flex; gap: 10px; margin-top: 14px; }
+.decision-textarea {
+  width: 100%; background: var(--panel); border: 1px solid var(--border);
+  border-radius: var(--r); color: var(--white); font-family: var(--font-body);
+  font-size: 13px; padding: 10px 12px; resize: vertical; min-height: 72px;
   transition: border-color .15s;
 }
-.modal-input:focus { border-color: var(--green); }
-.modal-textarea {
-  width: 100%; min-height: 80px; resize: vertical;
-  padding: 8px 12px; border: 1px solid var(--border);
-  border-radius: var(--r); font-family: 'IBM Plex Sans', sans-serif;
-  font-size: 12px; color: var(--ink); background: var(--panel); outline: none;
-  transition: border-color .15s;
-}
-.modal-textarea:focus { border-color: var(--green); }
+.decision-textarea:focus { outline: none; border-color: var(--teal); }
+.decision-textarea::placeholder { color: var(--muted); }
 
-/* toast */
-.toast {
-  position: fixed; bottom: 24px; right: 24px; z-index: 300;
-  background: var(--ink); color: #fff; border-radius: var(--r);
-  padding: 12px 20px; font-size: 13px; font-weight: 500;
-  box-shadow: 0 8px 24px rgba(0,0,0,.3);
-  display: none; animation: toastIn .25s ease;
+/* ── Audit trail ──────────────────────────────────────────────── */
+.audit-item {
+  display: flex; gap: 12px; padding: 12px 0;
+  border-bottom: 1px solid rgba(255,255,255,.04);
 }
-.toast.show { display: block; }
-@keyframes toastIn { from { transform: translateY(8px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.audit-time { font-family: var(--font-mono); font-size: 10px; color: var(--muted); min-width: 80px; margin-top: 2px; }
+.audit-dot {
+  width: 8px; height: 8px; border-radius: 50%; background: var(--teal);
+  margin-top: 4px; flex-shrink: 0;
+}
+.audit-dot.gold { background: var(--gold); }
+.audit-dot.red  { background: var(--red); }
+.audit-dot.green{ background: var(--green); }
+.audit-event { font-size: 13px; color: var(--white); }
+.audit-detail { font-size: 11px; color: var(--muted); margin-top: 2px; font-family: var(--font-mono); }
 
-/* empty state */
-.empty-state {
-  flex: 1; display: flex; flex-direction: column;
+/* ── Bar chart ────────────────────────────────────────────────── */
+.bar-chart { display: flex; align-items: flex-end; gap: 8px; height: 80px; padding-top: 10px; }
+.bar-col { display: flex; flex-direction: column; align-items: center; flex: 1; height: 100%; justify-content: flex-end; }
+.bar-fill { width: 100%; border-radius: 3px 3px 0 0; transition: height 1s ease; min-height: 2px; }
+.bar-label { font-size: 9px; color: var(--muted); font-family: var(--font-mono); margin-top: 4px; }
+
+/* ── Modal overlay ────────────────────────────────────────────── */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(6,20,38,.85); z-index: 100;
   align-items: center; justify-content: center;
-  color: var(--muted); gap: 8px; padding: 40px;
+  backdrop-filter: blur(3px);
 }
-.empty-icon { font-size: 36px; opacity: .4; }
-.empty-title { font-family: 'IBM Plex Sans Condensed', sans-serif; font-weight: 700; font-size: 15px; color: var(--muted); }
-.empty-sub { font-size: 12px; text-align: center; max-width: 200px; line-height: 1.5; }
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 12px; padding: 28px 28px 24px;
+  max-width: 480px; width: 90%; animation: modalIn .2s ease;
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(12px) scale(.97); }
+  to   { opacity: 1; transform: none; }
+}
+.modal-title { font-family: var(--font-head); font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+.modal-body { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 18px; }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
 
-/* portfolio strip at bottom of main */
-.portfolio-strip {
-  background: var(--white); border-top: 1px solid var(--border);
-  padding: 10px 20px; display: flex; gap: 28px; align-items: center;
-  flex-shrink: 0;
+/* ── Toast ────────────────────────────────────────────────────── */
+.toast {
+  position: fixed; bottom: 24px; right: 24px; z-index: 200;
+  background: var(--teal); color: var(--navy-dark);
+  padding: 12px 20px; border-radius: 8px;
+  font-weight: 600; font-size: 13px;
+  animation: toastIn .3s ease; pointer-events: none;
+  max-width: 340px;
 }
-.ps-item { text-align: center; }
-.ps-val { font-family: 'IBM Plex Sans Condensed', sans-serif; font-weight: 700; font-size: 16px; color: var(--ink); }
-.ps-label { font-size: 10px; color: var(--muted); font-family: 'IBM Plex Mono', monospace; text-transform: uppercase; }
-.ps-divider { width: 1px; height: 30px; background: var(--border); }
+@keyframes toastIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; } }
+.toast.hide { animation: toastOut .3s ease forwards; }
+@keyframes toastOut { to { opacity: 0; transform: translateY(8px); } }
+
+/* ── Mini sparkline ───────────────────────────────────────────── */
+svg.sparkline { display: block; }
+
+/* ── No application selected ──────────────────────────────────── */
+.empty-state {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; height: 100%; color: var(--muted);
+  gap: 12px;
+}
+.empty-icon { font-size: 40px; opacity: .4; }
+.empty-text { font-size: 14px; }
+
+/* ── Responsive fine-tuning ───────────────────────────────────── */
+@media (max-width: 900px) {
+  #sidebar { width: 180px; min-width: 180px; }
+  .grid-4 { grid-template-columns: repeat(2,1fr); }
+}
+
+/* ── Glow accents ─────────────────────────────────────────────── */
+.teal-glow-text { color: var(--teal); text-shadow: 0 0 12px rgba(0,168,150,.5); }
+
+/* ── Tag ──────────────────────────────────────────────────────── */
+.tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 9px; border-radius: 99px; font-size: 11px;
+  font-family: var(--font-mono); font-weight: 500;
+}
+.tag-processing { background: var(--teal-glow); color: var(--teal); border: 1px solid rgba(0,168,150,.3); }
+.tag-complete   { background: rgba(46,204,113,.1); color: var(--green); border: 1px solid rgba(46,204,113,.3); }
+.tag-pending    { background: rgba(122,148,172,.1); color: var(--muted); border: 1px solid rgba(122,148,172,.2); }
+.tag-flagged    { background: rgba(245,166,35,.1); color: var(--gold); border: 1px solid rgba(245,166,35,.3); }
+
+/* ── Decision submitted state ─────────────────────────────────── */
+.decision-submitted {
+  display: flex; align-items: center; gap: 12px;
+  padding: 16px; background: rgba(46,204,113,.08);
+  border: 1px solid rgba(46,204,113,.3); border-radius: var(--r);
+}
+.decision-submitted-icon { font-size: 24px; }
+.decision-submitted-text { font-size: 13px; color: var(--green); font-weight: 500; }
+.decision-submitted-sub { font-size: 11px; color: var(--muted); font-family: var(--font-mono); margin-top: 2px; }
 </style>
 </head>
 <body>
 
-<div class="shell">
+<div id="app">
 
-  <!-- ═══ TOPBAR ═══ -->
-  <header class="topbar">
-    <div class="tb-logo">Fin<span>pal</span></div>
-    <div class="tb-nav-item active">Queue</div>
-    <div class="tb-nav-item">Portfolio</div>
-    <div class="tb-nav-item">Reports</div>
-    <div class="tb-nav-item">Settings</div>
-    <div class="tb-spacer"></div>
-    <div class="tb-badge">● AI ONLINE</div>
-    <div class="tb-user">
-      <div class="tb-avatar">SC</div>
-      <span>S. Connolly</span>
-    </div>
-  </header>
-
-  <!-- ═══ QUEUE ═══ -->
-  <aside class="queue">
-    <div class="queue-header">
-      <div class="queue-title">Today's Queue <span style="color:var(--ink2);margin-left:4px">14</span></div>
-      <div class="queue-filters">
-        <button class="q-filter on" onclick="filterQueue(this,'all')">All</button>
-        <button class="q-filter" onclick="filterQueue(this,'pending')">Pending</button>
-        <button class="q-filter" onclick="filterQueue(this,'refer')">Referred</button>
-        <button class="q-filter" onclick="filterQueue(this,'flag')">⚑ Flagged</button>
+  <!-- SIDEBAR -->
+  <nav id="sidebar">
+    <div class="logo">
+      <div class="logo-mark">F</div>
+      <div>
+        <div class="logo-text">FinPal</div>
+        <div class="logo-tag">CREDIT INTELLIGENCE</div>
       </div>
     </div>
-    <div class="queue-list" id="queue-list"></div>
-  </aside>
 
-  <!-- ═══ MAIN ═══ -->
-  <main class="main" id="main-panel">
-    <div class="empty-state" id="empty-state">
-      <div class="empty-icon">📋</div>
-      <div class="empty-title">No application selected</div>
-      <div class="empty-sub">Pick an application from the queue to begin review</div>
+    <div class="nav-section">
+      <div class="nav-label">Platform</div>
+      <div class="nav-item active" data-view="apps">
+        <span class="icon">⬛</span> Applications
+        <span class="nav-badge">4</span>
+      </div>
+      <div class="nav-item" data-view="audit">
+        <span class="icon">◧</span> Audit Trail
+      </div>
     </div>
-    <!-- application view injected by JS -->
-    <div id="app-view" style="display:none;flex-direction:column;flex:1;overflow:hidden;">
 
-      <div class="main-header">
-        <div class="mh-left">
-          <div class="mh-name" id="app-name">—</div>
-          <div class="mh-meta">
-            <div class="mh-meta-item">Ref: <span id="app-ref">—</span></div>
-            <div class="mh-meta-item">Type: <span id="app-type">—</span></div>
-            <div class="mh-meta-item">Amount: <span id="app-amount">—</span></div>
-            <div class="mh-meta-item">Received: <span id="app-received">—</span></div>
-            <div class="mh-meta-item">Sector/Purpose: <span id="app-purpose">—</span></div>
-          </div>
+    <div class="nav-section" style="flex:1;overflow:hidden;display:flex;flex-direction:column;">
+      <div class="nav-label">Queue</div>
+      <div class="app-list" id="app-list"></div>
+    </div>
+
+    <div style="padding:12px;border-top:1px solid var(--border)">
+      <div style="font-size:11px;color:var(--muted);font-family:var(--font-mono)">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <span>Region</span><span style="color:var(--teal)">EU / Ireland</span>
         </div>
-        <div class="mh-actions">
-          <button class="btn btn-ghost" onclick="openModal('refer')">Refer ↗</button>
-          <button class="btn btn-decline" onclick="openModal('decline')">Decline</button>
-          <button class="btn btn-approve" onclick="openModal('approve')">Approve ✓</button>
+        <div style="display:flex;justify-content:space-between">
+          <span>Data residency</span><span style="color:var(--green)">✓ Azure West EU</span>
         </div>
       </div>
+    </div>
+  </nav>
 
-      <div class="main-body" id="main-body" style="overflow-y:auto;flex:1;">
-        <!-- injected per application -->
+  <!-- MAIN -->
+  <div id="main">
+    <div id="topbar">
+      <div>
+        <div class="topbar-title" id="topbar-title">Applications</div>
+        <div class="topbar-subtitle" id="topbar-sub">FinPal Credit Intelligence · CBI-Regulated Lender Portal</div>
       </div>
-
-      <div class="portfolio-strip">
-        <div class="ps-item"><div class="ps-val">14</div><div class="ps-label">In Queue</div></div>
-        <div class="ps-divider"></div>
-        <div class="ps-item"><div class="ps-val">9</div><div class="ps-label">Pending</div></div>
-        <div class="ps-divider"></div>
-        <div class="ps-item"><div class="ps-val">3</div><div class="ps-label">Referred</div></div>
-        <div class="ps-divider"></div>
-        <div class="ps-item"><div class="ps-val" style="color:var(--green)">€2.1M</div><div class="ps-label">Approved Today</div></div>
-        <div class="ps-divider"></div>
-        <div class="ps-item"><div class="ps-val" style="color:var(--red)">€340K</div><div class="ps-label">Declined Today</div></div>
-        <div class="ps-divider"></div>
-        <div class="ps-item"><div class="ps-val">62%</div><div class="ps-label">Approval Rate</div></div>
+      <div class="topbar-actions" id="topbar-actions">
+        <button class="btn btn-outline" onclick="showNewAppModal()">＋ New Application</button>
       </div>
     </div>
-  </main>
 
-  <!-- ═══ AI PANEL ═══ -->
-  <aside class="ai-panel">
-    <div class="ai-header">
-      <div class="ai-header-title">AI Assessment</div>
-      <div class="ai-model-tag">finpal-v3.1</div>
-      <div class="ai-live-dot"></div>
-    </div>
-    <div class="ai-body" id="ai-body">
-      <div class="empty-state" style="height:100%">
-        <div class="empty-icon">🤖</div>
-        <div class="empty-title">Awaiting selection</div>
-        <div class="empty-sub">AI analysis will appear here once you open an application</div>
+    <div id="content">
+      <div id="view-apps" class="panel active">
+        <div class="empty-state">
+          <div class="empty-icon">📂</div>
+          <div class="empty-text">Select an application from the queue to begin</div>
+        </div>
       </div>
-    </div>
-  </aside>
-
-</div><!-- /shell -->
-
-<!-- ═══ DECISION MODAL ═══ -->
-<div class="modal-overlay" id="modal-overlay">
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title" id="modal-title">Confirm Decision</div>
-      <button class="modal-close" onclick="closeModal()">×</button>
-    </div>
-    <div class="modal-body" id="modal-body"></div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-approve" id="modal-confirm" onclick="confirmDecision()">Confirm</button>
     </div>
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
+<!-- Decision modal -->
+<div class="modal-overlay" id="decision-modal">
+  <div class="modal">
+    <div class="modal-title" id="dm-title">Submit Credit Decision</div>
+    <div class="modal-body" id="dm-body">
+      You are about to submit a formal credit decision. Under Ireland's Individual Accountability Framework, this decision and your documented rationale will be permanently logged to the immutable audit trail.
+    </div>
+    <textarea class="decision-textarea" id="dm-rationale" placeholder="Enter your decision rationale (mandatory under IAF)…"></textarea>
+    <div style="font-size:11px;color:var(--muted);font-family:var(--font-mono);margin-top:6px">
+      ⚠ This action is irreversible. Your name and timestamp will be recorded.
+    </div>
+    <div class="modal-actions" style="margin-top:14px">
+      <button class="btn btn-outline" onclick="closeDecisionModal()">Cancel</button>
+      <button class="btn btn-danger" id="dm-decline-btn" onclick="submitDecision('decline')">Decline</button>
+      <button class="btn btn-primary" id="dm-approve-btn" onclick="submitDecision('approve')">Approve</button>
+    </div>
+  </div>
+</div>
 
-<!-- ═══════════════════ JAVASCRIPT ═══════════════════ -->
+<!-- New App modal -->
+<div class="modal-overlay" id="new-app-modal">
+  <div class="modal">
+    <div class="modal-title">New SME Application</div>
+    <div class="modal-body">Submit a new SME credit application for automated assessment.</div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <input type="text" id="new-company" placeholder="Company name" style="background:var(--panel);border:1px solid var(--border);border-radius:var(--r);color:var(--white);font-family:var(--font-body);font-size:13px;padding:9px 12px;width:100%">
+      <input type="text" id="new-amount" placeholder="Loan amount requested (€)" style="background:var(--panel);border:1px solid var(--border);border-radius:var(--r);color:var(--white);font-family:var(--font-body);font-size:13px;padding:9px 12px;width:100%">
+      <select id="new-type" style="background:var(--panel);border:1px solid var(--border);border-radius:var(--r);color:var(--white);font-family:var(--font-body);font-size:13px;padding:9px 12px;width:100%">
+        <option value="">Loan type…</option>
+        <option>Working Capital</option>
+        <option>Asset Finance</option>
+        <option>Commercial Mortgage</option>
+        <option>Invoice Finance</option>
+      </select>
+    </div>
+    <div class="modal-actions" style="margin-top:18px">
+      <button class="btn btn-outline" onclick="document.getElementById('new-app-modal').classList.remove('open')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitNewApp()">Begin Assessment</button>
+    </div>
+  </div>
+</div>
+
 <script>
-/* ─── DATA ─────────────────────────────────────────── */
+// ── Data ──────────────────────────────────────────────────────────────────
 const APPS = [
   {
-    id: 'FP-9041', name: 'Aoife Brennan', type: 'Household',
-    amount: 42000, purpose: 'Home Improvement', term: 60,
-    received: 'Today 08:14', status: 'pending',
-    flags: ['docs'],
-    score: 74, aiVerdict: 'approve', confidence: 88,
-    data: {
-      income: 54000, employment: 'Full-Time Permanent', employer: 'HSE',
-      existing_debt_pm: 380, credit_score: 680, age: 36,
-      dti: 32, lti: 0.78, dtsr: 18
-    },
-    factors: [
-      { label: 'Credit History',   val: '680 / 1000',  pct: 68, impact: '+14.2', dir: 'pos' },
-      { label: 'Debt-to-Income',   val: '32%',          pct: 42, impact: '+8.1',  dir: 'pos' },
-      { label: 'Employment Stability', val: 'Permanent', pct: 90, impact: '+11.6', dir: 'pos' },
-      { label: 'Loan-to-Income',   val: '0.78×',        pct: 78, impact: '+6.3',  dir: 'pos' },
-      { label: 'Repayment History',val: 'No defaults',  pct: 100, impact: '+9.8', dir: 'pos' },
-      { label: 'Income Stability', val: 'Public sector',pct: 95, impact: '+7.2',  dir: 'pos' },
+    id: 'FP-2025-0041',
+    company: "O'Brien Construction Ltd",
+    sector: 'Construction',
+    amount: '€420,000',
+    loanType: 'Working Capital',
+    crn: 'CRN 654821',
+    requested: '18 Feb 2025',
+    status: 'complete',
+    dscr: 1.42,
+    revenue: '€2.84M',
+    revenueActual: '€2.61M',
+    cashflow: '€187K',
+    discrepancy: true,
+    discrepancyDetail: 'Declared revenue €2.84M vs actual lodgements €2.61M — variance of €230K (8.1%). Likely timing of year-end receivables. Flagged for underwriter review.',
+    narrative: `<strong>O'Brien Construction Ltd</strong> is a 12-year-old construction and civil engineering firm based in Dublin 12. The company employs 34 FTE and has maintained continuous trading throughout the assessment period. <br><br>Open banking analysis of the AIB business current account (24 months, ending Feb 2025) confirms <strong>average monthly revenue lodgements of €217K</strong>, giving an annualised actual turnover of €2.61M. The company's management accounts declare €2.84M — a variance of <strong>€230K (8.1%)</strong> which should be explored at credit interview. Variance is within tolerable range and may reflect timing of large contract receivables. <br><br>Debt Service Coverage Ratio calculated at <strong>1.42×</strong> on actual cash flows, comfortably above the lender's 1.20× policy threshold. The company carries <strong>two existing SBCI-guaranteed facilities</strong> (combined €150K remaining) with no missed payments in the analysis window. <br><br>AML screening returned <strong>clear on directors</strong>. CRO filings are current. Tax clearance confirmed via ROS. No adverse indicators identified.`,
+    checks: [
+      { name: 'AML / PEP Screening', detail: 'Seán O\'Brien (Director) — Clear. Marie O\'Brien (Director) — Clear. No PEP, sanction, or adverse media hits.', status: 'pass', time: '14:22:07' },
+      { name: 'CRO Company History', detail: 'Incorporated 12 Feb 2013. Status: Normal. 2 directors. Latest accounts filed 30 Nov 2024. No winding-up orders, no judgements registered.', status: 'pass', time: '14:22:09' },
+      { name: 'Tax Clearance (ROS)', detail: 'Clearance certificate valid. Expiry: 31 Dec 2025. VAT, PAYE, CT all current.', status: 'pass', time: '14:22:11' },
+      { name: 'Existing Debt Schedule', detail: 'SBCI Working Capital: €60K remaining, 12 months. SBCI Equipment: €90K remaining, 18 months. Total monthly obligation: €12,800.', status: 'warn', time: '14:22:13' },
+      { name: 'Revenue Reconciliation', detail: 'Declared €2.84M vs actual lodgements €2.61M. Variance €230K (8.1%). Within tolerable range — flagged for review.', status: 'warn', time: '14:22:15' },
+      { name: 'Credit Policy Check', detail: 'DSCR 1.42× ≥ 1.20× threshold ✓. LTV N/A (working capital). Sector: Construction — standard risk weighting applied. All policy gates passed.', status: 'pass', time: '14:22:17' },
     ],
-    docs: [
-      { name: 'Photo ID (Passport)', status: 'ok',   note: 'Verified' },
-      { name: '3 Months Payslips',   status: 'ok',   note: 'Verified' },
-      { name: 'Bank Statements (6mo)',status: 'warn', note: 'Only 3 months provided' },
-      { name: 'Proof of Address',     status: 'ok',  note: 'Verified' },
-      { name: 'Employment Letter',    status: 'miss', note: 'Not submitted' },
+    transactions: [
+      { date: 'Jan 25', desc: 'LODGE - MCMAHON CIVIL ENG', category: 'Revenue', amount: '+€84,200' },
+      { date: 'Jan 25', desc: 'LODGE - DUBLIN CITY COUNCIL', category: 'Revenue', amount: '+€112,450' },
+      { date: 'Jan 25', desc: 'DWT PAYROLL', category: 'Payroll', amount: '-€62,400' },
+      { date: 'Jan 25', desc: 'AIB LOAN REPAYMENT', category: 'Debt Service', amount: '-€12,800' },
+      { date: 'Jan 25', desc: 'VAT ROS PAYMENT', category: 'Tax', amount: '-€28,650' },
+      { date: 'Dec 24', desc: 'LODGE - COYLE CONTRACTS', category: 'Revenue', amount: '+€96,300' },
+      { date: 'Dec 24', desc: 'DWT PAYROLL', category: 'Payroll', amount: '-€62,400' },
+      { date: 'Nov 24', desc: 'LODGE - NTA FRAMEWORK', category: 'Revenue', amount: '+€145,000' },
+      { date: 'Nov 24', desc: 'LODGE - MCMAHON CIVIL ENG', category: 'Revenue', amount: '+€67,800' },
+      { date: 'Nov 24', desc: 'DWT PAYROLL', category: 'Payroll', amount: '-€62,400' },
     ],
-    reasoning: 'Strong application. Applicant is a permanent public-sector employee with a stable income of €54,000. Debt-to-income of 32% is well within policy ceiling of 45%. Credit score of 680 is above the 620 threshold. Loan-to-income of 0.78× is conservative. Main concern: 3-month bank statement gap and missing employment letter — recommend requesting before final issue. AI confidence is high at 88%.',
-    timeline: [
-      { text: 'Application submitted online', sub: 'Via self-service portal', time: '08:14', color: 'var(--blue)' },
-      { text: 'Open Banking data pulled', sub: 'Revolut + AIB connected', time: '08:14', color: 'var(--green)' },
-      { text: 'Bureau check completed', sub: 'CATO score returned: 680', time: '08:15', color: 'var(--green)' },
-      { text: 'AI scoring complete', sub: 'Score 74 / Approve at 88% confidence', time: '08:15', color: 'var(--green)' },
-      { text: 'Docs review flagged', sub: 'Employment letter missing', time: '08:15', color: 'var(--amber)' },
-    ],
-    suggestedRate: '6.9', suggestedTerm: 60,
+    bars: [70, 82, 88, 65, 92, 78, 84, 71, 96, 80, 87, 73],
   },
   {
-    id: 'FP-9042', name: 'Murphy Agri Supplies Ltd', type: 'SME',
-    amount: 180000, purpose: 'Equipment Finance', term: 48,
-    received: 'Today 08:31', status: 'refer',
-    flags: ['fraud'],
-    score: 51, aiVerdict: 'refer', confidence: 72,
-    data: {
-      revenue: 620000, ebitda_pct: 9, years_trading: 3.5, employees: 8,
-      sector: 'Agriculture', existing_debt: 42000, dscr: 1.18
-    },
-    factors: [
-      { label: 'Revenue Coverage',  val: '0.29× LTR',  pct: 71, impact: '+9.0',  dir: 'pos' },
-      { label: 'EBITDA Margin',     val: '9%',          pct: 45, impact: '-3.2',  dir: 'neg' },
-      { label: 'Years Trading',     val: '3.5 yrs',     pct: 52, impact: '-4.1',  dir: 'neg' },
-      { label: 'Sector Risk',       val: 'Agriculture', pct: 60, impact: '-1.8',  dir: 'neg' },
-      { label: 'DSCR',             val: '1.18×',        pct: 55, impact: '+4.2',  dir: 'pos' },
-      { label: 'Director Credit',   val: '591 / 1000',  pct: 59, impact: '-2.9',  dir: 'neg' },
-    ],
-    docs: [
-      { name: 'Certificate of Incorporation', status: 'ok',   note: 'Verified' },
-      { name: '2 Years Audited Accounts',     status: 'ok',   note: 'FY22 & FY23' },
-      { name: 'Management Accounts (YTD)',    status: 'warn', note: 'Unaudited, Jun 2024' },
-      { name: 'Director Passport',            status: 'ok',   note: 'Verified' },
-      { name: 'Revenue / Tax Clearance',      status: 'miss', note: 'Not submitted' },
-      { name: 'Asset Quote / Invoice',        status: 'warn', note: 'Quote only, no supplier detail' },
-    ],
-    reasoning: 'Borderline SME. Adequate revenue at €620K but thin EBITDA of 9% leaves limited debt service headroom. DSCR of 1.18× is above minimum (1.10×) but stressed at +2% rates it falls to 1.04×. Director credit score of 591 is a secondary concern. Revenue / Tax Clearance not submitted — required under AML policy §3.4. Asset quote lacks supplier verification: potential procurement fraud indicator. Recommend refer to senior underwriter with request for full tax clearance and asset supplier confirmation.',
-    timeline: [
-      { text: 'Application submitted', sub: 'Via broker portal', time: '08:31', color: 'var(--blue)' },
-      { text: 'Companies House data pulled', sub: 'CRO verified, active status', time: '08:32', color: 'var(--green)' },
-      { text: 'Fraud signal detected', sub: 'Asset supplier unverified', time: '08:32', color: 'var(--red)' },
-      { text: 'AI scoring complete', sub: 'Score 51 / Refer at 72% confidence', time: '08:32', color: 'var(--amber)' },
-      { text: 'Tax clearance missing', sub: 'AML hold triggered', time: '08:33', color: 'var(--amber)' },
-    ],
-    suggestedRate: '8.4', suggestedTerm: 48,
+    id: 'FP-2025-0042',
+    company: 'Clancy Logistics DAC',
+    sector: 'Transport & Logistics',
+    amount: '€185,000',
+    loanType: 'Asset Finance',
+    crn: 'CRN 412076',
+    requested: '19 Feb 2025',
+    status: 'processing',
+    dscr: null,
+    revenue: null,
+    discrepancy: false,
+    narrative: null,
+    checks: [],
+    transactions: [],
+    bars: [],
   },
   {
-    id: 'FP-9043', name: 'Declan Farrell', type: 'Household',
-    amount: 15000, purpose: 'Debt Consolidation', term: 36,
-    received: 'Today 09:02', status: 'pending',
-    flags: [],
-    score: 82, aiVerdict: 'approve', confidence: 93,
-    data: {
-      income: 61000, employment: 'Full-Time Permanent', employer: 'CRH plc',
-      existing_debt_pm: 220, credit_score: 730, age: 41,
-      dti: 21, lti: 0.25, dtsr: 11
-    },
-    factors: [
-      { label: 'Credit History',      val: '730 / 1000', pct: 73, impact: '+16.0', dir: 'pos' },
-      { label: 'Debt-to-Income',      val: '21%',         pct: 79, impact: '+12.1', dir: 'pos' },
-      { label: 'Employment Stability',val: 'Permanent',   pct: 90, impact: '+11.6', dir: 'pos' },
-      { label: 'Loan-to-Income',      val: '0.25×',       pct: 95, impact: '+9.4',  dir: 'pos' },
-      { label: 'Repayment History',   val: 'Clean',       pct: 100,impact: '+9.8',  dir: 'pos' },
-      { label: 'Consolidation Risk',  val: 'Low',         pct: 80, impact: '+5.0',  dir: 'pos' },
+    id: 'FP-2025-0040',
+    company: 'Ferris Hospitality Group',
+    sector: 'Hospitality',
+    amount: '€310,000',
+    loanType: 'Working Capital',
+    crn: 'CRN 589340',
+    requested: '15 Feb 2025',
+    status: 'flagged',
+    dscr: 1.08,
+    revenue: '€1.92M',
+    revenueActual: '€1.55M',
+    cashflow: '€44K',
+    discrepancy: true,
+    discrepancyDetail: 'Declared revenue €1.92M vs actual lodgements €1.55M — variance of €370K (19.3%). Materially above tolerance. Combined with DSCR of 1.08× (below 1.20× policy minimum), this application does not currently meet credit policy. Recommend decline unless additional collateral offered.',
+    narrative: `<strong>Ferris Hospitality Group</strong> operates two licensed premises in Cork city. Open banking analysis reveals <strong>significant revenue discrepancy</strong> — declared management accounts show €1.92M turnover, however lodgements total only €1.55M, a variance of <strong>€370K (19.3%)</strong> which materially exceeds the lender's 10% tolerance threshold.<br><br>DSCR calculated at <strong>1.08×</strong> on actual cash flows, which is <strong>below the lender's 1.20× minimum policy requirement</strong>. Current debt obligations are €18,200/month across two existing facilities. Free cash flow after servicing is marginal at €44K per annum.<br><br>AML screening clear on all directors. CRO filings are current. Tax clearance valid. Revenue discrepancy and sub-policy DSCR are the critical concerns for this application.`,
+    checks: [
+      { name: 'AML / PEP Screening', detail: 'Eoin Ferris (Director) — Clear. Patricia Ferris (Director) — Clear.', status: 'pass', time: '09:14:22' },
+      { name: 'CRO Company History', detail: 'Incorporated 3 Sep 2011. Status: Normal. Latest accounts filed 28 Sep 2024.', status: 'pass', time: '09:14:24' },
+      { name: 'Tax Clearance (ROS)', detail: 'Clearance certificate valid. Expiry: 31 Dec 2025.', status: 'pass', time: '09:14:26' },
+      { name: 'Revenue Reconciliation', detail: 'Declared €1.92M vs actual lodgements €1.55M. Variance €370K (19.3%). EXCEEDS 10% tolerance threshold.', status: 'fail', time: '09:14:28' },
+      { name: 'Credit Policy — DSCR', detail: 'DSCR 1.08× BELOW 1.20× policy minimum. Application does not currently meet credit policy.', status: 'fail', time: '09:14:30' },
     ],
-    docs: [
-      { name: 'Photo ID (Passport)',    status: 'ok', note: 'Verified' },
-      { name: '3 Months Payslips',      status: 'ok', note: 'Verified' },
-      { name: 'Bank Statements (6mo)',  status: 'ok', note: 'Verified' },
-      { name: 'Proof of Address',       status: 'ok', note: 'Verified' },
-      { name: 'Existing Loan Statements',status:'ok', note: 'All 3 loans verified' },
+    transactions: [
+      { date: 'Jan 25', desc: 'LODGE - ZETTLE CARD SALES', category: 'Revenue', amount: '+€28,400' },
+      { date: 'Jan 25', desc: 'LODGE - CASH TAKINGS', category: 'Revenue', amount: '+€14,200' },
+      { date: 'Jan 25', desc: 'DWT PAYROLL', category: 'Payroll', amount: '-€22,100' },
+      { date: 'Jan 25', desc: 'AIB TERM LOAN', category: 'Debt Service', amount: '-€18,200' },
+      { date: 'Dec 24', desc: 'LODGE - ZETTLE CARD SALES', category: 'Revenue', amount: '+€31,800' },
+      { date: 'Dec 24', desc: 'LODGE - CASH TAKINGS', category: 'Revenue', amount: '+€17,600' },
+      { date: 'Dec 24', desc: 'DWT PAYROLL', category: 'Payroll', amount: '-€22,100' },
     ],
-    reasoning: 'Clean application. High earner with €61K income and a minimal debt service burden of 21%. Credit score of 730 is well above threshold. Consolidation purpose reduces payment complexity and improves affordability. All documents complete and verified. No fraud signals. Recommend full approval at standard rate. AI confidence 93%.',
-    timeline: [
-      { text: 'Application submitted online', sub: 'Via self-service portal', time: '09:02', color: 'var(--blue)' },
-      { text: 'Open Banking data pulled',     sub: 'Bank of Ireland connected', time: '09:02', color: 'var(--green)' },
-      { text: 'Bureau check completed',       sub: 'CATO score returned: 730', time: '09:02', color: 'var(--green)' },
-      { text: 'AI scoring complete',          sub: 'Score 82 / Approve at 93% confidence', time: '09:03', color: 'var(--green)' },
-      { text: 'All documents verified',       sub: 'No exceptions', time: '09:03', color: 'var(--green)' },
-    ],
-    suggestedRate: '5.9', suggestedTerm: 36,
+    bars: [45, 52, 48, 55, 42, 60, 38, 44, 50, 47, 55, 43],
   },
   {
-    id: 'FP-9044', name: 'Brighid Ó Maolalaidh', type: 'Household',
-    amount: 28000, purpose: 'Car Purchase', term: 60,
-    received: 'Today 09:15', status: 'pending',
-    flags: [],
-    score: 39, aiVerdict: 'decline', confidence: 85,
-    data: {
-      income: 28000, employment: 'Contract', employer: 'Self (Locum)',
-      existing_debt_pm: 690, credit_score: 510, age: 29,
-      dti: 74, lti: 1.0, dtsr: 43
-    },
-    factors: [
-      { label: 'Credit History',      val: '510 / 1000', pct: 51, impact: '-11.2', dir: 'neg' },
-      { label: 'Debt-to-Income',      val: '74%',         pct: 10, impact: '-18.4', dir: 'neg' },
-      { label: 'Employment Stability',val: 'Contract',    pct: 38, impact: '-7.3',  dir: 'neg' },
-      { label: 'Loan-to-Income',      val: '1.0×',        pct: 32, impact: '-8.1',  dir: 'neg' },
-      { label: 'Repayment History',   val: '1 missed pmt',pct: 30, impact: '-9.2',  dir: 'neg' },
-      { label: 'Debt Service Ratio',  val: '43%',         pct: 15, impact: '-12.0', dir: 'neg' },
-    ],
-    docs: [
-      { name: 'Photo ID (Passport)',   status: 'ok',  note: 'Verified' },
-      { name: '3 Months Payslips',     status: 'warn',note: 'Irregular amounts' },
-      { name: 'Bank Statements (6mo)', status: 'ok',  note: 'Verified' },
-      { name: 'Proof of Address',      status: 'ok',  note: 'Verified' },
-    ],
-    reasoning: 'Application falls significantly below minimum thresholds. Debt-to-income of 74% exceeds the 45% policy ceiling by 29 percentage points. Credit score of 510 is below the 580 minimum. One missed payment on existing loan noted in bureau data. Contract employment with irregular payslips introduces income uncertainty. Debt service coverage ratio of 43% confirms unaffordable. Recommend standard policy decline. Consumer Protection Code §9 adverse notice required.',
-    timeline: [
-      { text: 'Application submitted online', sub: 'Via self-service portal', time: '09:15', color: 'var(--blue)' },
-      { text: 'Open Banking data pulled',     sub: 'N26 connected', time: '09:15', color: 'var(--green)' },
-      { text: 'Bureau check completed',       sub: 'CATO score returned: 510 — 1 missed payment', time: '09:15', color: 'var(--red)' },
-      { text: 'AI scoring complete',          sub: 'Score 39 / Decline at 85% confidence', time: '09:16', color: 'var(--red)' },
-    ],
-    suggestedRate: null, suggestedTerm: null,
-  },
-  {
-    id: 'FP-9045', name: 'Salthill Fitness Ltd', type: 'SME',
-    amount: 95000, purpose: 'Expansion', term: 60,
-    received: 'Today 09:28', status: 'pending',
-    flags: [],
-    score: 68, aiVerdict: 'approve', confidence: 80,
-    data: {
-      revenue: 410000, ebitda_pct: 14, years_trading: 6, employees: 11,
-      sector: 'Leisure', existing_debt: 18000, dscr: 1.42
-    },
-    factors: [
-      { label: 'Revenue Coverage',  val: '0.23× LTR',  pct: 77, impact: '+10.2', dir: 'pos' },
-      { label: 'EBITDA Margin',     val: '14%',          pct: 65, impact: '+6.8',  dir: 'pos' },
-      { label: 'Years Trading',     val: '6 yrs',        pct: 80, impact: '+8.0',  dir: 'pos' },
-      { label: 'DSCR',             val: '1.42×',         pct: 72, impact: '+7.6',  dir: 'pos' },
-      { label: 'Sector Risk',       val: 'Leisure',      pct: 50, impact: '-4.1',  dir: 'neg' },
-      { label: 'Director Credit',   val: '661 / 1000',   pct: 66, impact: '+3.2',  dir: 'pos' },
-    ],
-    docs: [
-      { name: 'Certificate of Incorporation', status: 'ok', note: 'Verified' },
-      { name: '2 Years Audited Accounts',     status: 'ok', note: 'FY22 & FY23' },
-      { name: 'Management Accounts (YTD)',    status: 'ok', note: 'Sep 2024, unaudited' },
-      { name: 'Director Passport',            status: 'ok', note: 'Verified' },
-      { name: 'Revenue / Tax Clearance',      status: 'ok', note: 'Valid to Dec 2024' },
-    ],
-    reasoning: 'Solid SME application. Six years of trading with improving margins. EBITDA of 14% supports debt service; DSCR of 1.42× gives stress headroom. Leisure sector assigned moderate risk weighting due to post-COVID sensitivity, but revenue trend is upward (+18% YoY). Full document set received and verified. AI confidence 80%. Recommend approve with standard commercial covenant package.',
-    timeline: [
-      { text: 'Application submitted', sub: 'Via broker portal', time: '09:28', color: 'var(--blue)' },
-      { text: 'CRO & Revenue verified', sub: 'Tax clearance valid', time: '09:29', color: 'var(--green)' },
-      { text: 'AI scoring complete', sub: 'Score 68 / Approve at 80% confidence', time: '09:29', color: 'var(--green)' },
-      { text: 'Full document set received', sub: 'No exceptions', time: '09:29', color: 'var(--green)' },
-    ],
-    suggestedRate: '7.5', suggestedTerm: 60,
+    id: 'FP-2025-0039',
+    company: 'GreenwayTech Solutions',
+    sector: 'Technology',
+    amount: '€90,000',
+    loanType: 'Working Capital',
+    crn: 'CRN 701234',
+    requested: '12 Feb 2025',
+    status: 'decided',
+    decision: 'approved',
+    dscr: 2.18,
+    revenue: '€1.1M',
+    revenueActual: '€1.08M',
+    cashflow: '€212K',
+    discrepancy: false,
+    narrative: null,
+    checks: [],
+    transactions: [],
+    bars: [60,65,70,72,68,80,75,82,88,84,90,86],
   },
 ];
 
-/* ─── STATE ─────────────────────────────────────────── */
-let activeId = null;
-let pendingDecision = null;
-let filterMode = 'all';
+let currentAppId = null;
+let processingTimer = null;
+let processingStep = 0;
+const processingSteps = [
+  'Ingesting uploaded documents…',
+  'Running OCR on management accounts…',
+  'Extracting financial figures…',
+  'Connecting to open banking (AIB Business)…',
+  'Pulling 24 months transaction history…',
+  'Categorising transactions…',
+  'Calculating DSCR & revenue trend…',
+  'Reconciling declared vs actual figures…',
+  'Running AML / PEP screening…',
+  'Checking CRO company registry…',
+  'Verifying tax clearance (ROS)…',
+  'Applying lender credit policy…',
+  'Generating evidence pack…',
+  'Building audit trail…',
+];
 
-/* ─── QUEUE RENDER ─────────────────────────────────── */
-function renderQueue() {
-  const list = document.getElementById('queue-list');
-  const filtered = APPS.filter(a => {
-    if (filterMode === 'all') return true;
-    if (filterMode === 'pending') return a.status === 'pending';
-    if (filterMode === 'refer') return a.status === 'refer';
-    if (filterMode === 'flag') return a.flags.length > 0;
-    return true;
-  });
-  list.innerHTML = filtered.map(a => {
-    const scoreColor = a.score >= 62 ? 'var(--green)' : a.score >= 42 ? 'var(--amber)' : 'var(--red)';
-    const sCls = a.aiVerdict === 'approve' ? 'qs-approve' : a.aiVerdict === 'refer' ? 'qs-refer' : 'qs-decline';
-    const sLabel = a.aiVerdict === 'approve' ? '↑ Approve' : a.aiVerdict === 'refer' ? '? Refer' : '↓ Decline';
-    const flagHtml = a.flags.includes('fraud') ? '<div class="q-flag flag-fraud" title="Fraud flag"></div>'
-                   : a.flags.includes('docs')  ? '<div class="q-flag flag-docs"  title="Docs incomplete"></div>'
-                   : '';
-    return `<div class="q-item${activeId===a.id?' selected':''}" onclick="selectApp('${a.id}')">
-      ${flagHtml}
-      <div class="q-item-top">
-        <div class="q-name">${a.name}</div>
-        <div class="q-amount">€${a.amount.toLocaleString('en-IE')}</div>
-      </div>
-      <div class="q-item-mid">
-        <div class="q-ref">${a.id}</div>
-        <div class="q-type">${a.type}</div>
-      </div>
-      <div class="q-item-bot">
-        <div class="q-score-wrap">
-          <div class="q-score-bar"><div class="q-score-fill" style="width:${a.score}%;background:${scoreColor}"></div></div>
-          <div class="q-score-num">${a.score}</div>
-        </div>
-        <span class="q-status ${sCls}">${sLabel}</span>
+// ── Render sidebar app list ───────────────────────────────────────────────
+function renderAppList() {
+  const el = document.getElementById('app-list');
+  el.innerHTML = APPS.map(a => {
+    const dot = {
+      complete: '<span class="status-dot dot-green"></span>',
+      processing: '<span class="status-dot dot-teal"></span>',
+      flagged: '<span class="status-dot dot-yellow"></span>',
+      decided: '<span class="status-dot dot-grey"></span>',
+    }[a.status];
+    const label = {
+      complete: 'Ready',
+      processing: 'Processing',
+      flagged: 'Flagged',
+      decided: a.decision === 'approved' ? 'Approved' : 'Decided',
+    }[a.status];
+    return `<div class="app-card ${currentAppId===a.id?'active':''}" onclick="loadApp('${a.id}')">
+      <div class="app-card-name">${a.company}</div>
+      <div class="app-card-meta">
+        <span>${dot}${label}</span>
+        <span>${a.amount}</span>
       </div>
     </div>`;
   }).join('');
 }
 
-function filterQueue(btn, mode) {
-  filterMode = mode;
-  document.querySelectorAll('.q-filter').forEach(b => b.classList.remove('on'));
-  btn.classList.add('on');
-  renderQueue();
-}
-
-/* ─── SELECT APP ─────────────────────────────────────── */
-function selectApp(id) {
-  activeId = id;
-  renderQueue();
+// ── Load application ──────────────────────────────────────────────────────
+function loadApp(id) {
+  currentAppId = id;
+  renderAppList();
   const app = APPS.find(a => a.id === id);
-  if (!app) return;
 
-  document.getElementById('empty-state').style.display = 'none';
-  const av = document.getElementById('app-view');
-  av.style.display = 'flex';
-
-  // header
-  document.getElementById('app-name').textContent = app.name;
-  document.getElementById('app-ref').textContent = app.id;
-  document.getElementById('app-type').textContent = app.type;
-  document.getElementById('app-amount').textContent = '€' + app.amount.toLocaleString('en-IE');
-  document.getElementById('app-received').textContent = app.received;
-  document.getElementById('app-purpose').textContent = app.purpose;
-
-  renderMainBody(app);
-  renderAiPanel(app);
-}
-
-/* ─── MAIN BODY ──────────────────────────────────────── */
-function renderMainBody(app) {
-  const isHH = app.type === 'Household';
-  const d = app.data;
-
-  // data grid
-  let gridHtml = '';
-  if (isHH) {
-    const dtiCls = d.dti > 45 ? 'bad' : d.dti > 35 ? 'warn' : 'good';
-    gridHtml = `
-      <div class="data-cell"><div class="data-cell-label">Annual Income</div><div class="data-cell-val">€${d.income.toLocaleString('en-IE')}</div><div class="data-cell-sub">${d.employment}</div></div>
-      <div class="data-cell"><div class="data-cell-label">Employer</div><div class="data-cell-val" style="font-size:13px">${d.employer}</div><div class="data-cell-sub">Verified</div></div>
-      <div class="data-cell"><div class="data-cell-label">Credit Score</div><div class="data-cell-val ${d.credit_score>=620?'good':d.credit_score>=500?'warn':'bad'}">${d.credit_score}</div><div class="data-cell-sub">CATO bureau</div></div>
-      <div class="data-cell"><div class="data-cell-label">Debt-to-Income</div><div class="data-cell-val ${dtiCls}">${d.dti}%</div><div class="data-cell-sub">Policy max: 45%</div></div>
-      <div class="data-cell"><div class="data-cell-label">Loan-to-Income</div><div class="data-cell-val ${d.lti>5?'bad':d.lti>3?'warn':'good'}">${d.lti}×</div><div class="data-cell-sub">Policy max: 5×</div></div>
-      <div class="data-cell"><div class="data-cell-label">Monthly Debt Svc</div><div class="data-cell-val">€${d.existing_debt_pm.toLocaleString()}</div><div class="data-cell-sub">Existing obligations</div></div>
-    `;
-  } else {
-    gridHtml = `
-      <div class="data-cell"><div class="data-cell-label">Annual Revenue</div><div class="data-cell-val">€${d.revenue.toLocaleString('en-IE')}</div><div class="data-cell-sub">${d.sector}</div></div>
-      <div class="data-cell"><div class="data-cell-label">EBITDA Margin</div><div class="data-cell-val ${d.ebitda_pct>=12?'good':d.ebitda_pct>=7?'warn':'bad'}">${d.ebitda_pct}%</div><div class="data-cell-sub">Policy min: 7%</div></div>
-      <div class="data-cell"><div class="data-cell-label">Years Trading</div><div class="data-cell-val ${d.years_trading>=3?'good':d.years_trading>=1?'warn':'bad'}">${d.years_trading} yrs</div><div class="data-cell-sub">Policy min: 2 yrs</div></div>
-      <div class="data-cell"><div class="data-cell-label">Employees</div><div class="data-cell-val">${d.employees}</div><div class="data-cell-sub">FTE</div></div>
-      <div class="data-cell"><div class="data-cell-label">DSCR</div><div class="data-cell-val ${d.dscr>=1.25?'good':d.dscr>=1.1?'warn':'bad'}">${d.dscr}×</div><div class="data-cell-sub">Policy min: 1.10×</div></div>
-      <div class="data-cell"><div class="data-cell-label">Existing Debt</div><div class="data-cell-val">€${d.existing_debt.toLocaleString()}/yr</div><div class="data-cell-sub">Existing facilities</div></div>
-    `;
-  }
-
-  // factors
-  const factorHtml = app.factors.map(f => {
-    const fillColor = f.dir === 'pos' ? 'var(--green)' : f.dir === 'neg' ? 'var(--red)' : 'var(--muted)';
-    const impactCls = f.dir === 'pos' ? 'fi-pos' : f.dir === 'neg' ? 'fi-neg' : 'fi-neu';
-    const impactLabel = f.dir === 'pos' ? '+' + f.impact : f.impact;
-    return `<div class="factor-row">
-      <div class="factor-label">${f.label}</div>
-      <div class="factor-track"><div class="factor-fill" style="width:${f.pct}%;background:${fillColor}"></div></div>
-      <div class="factor-val">${f.val}</div>
-      <div class="factor-impact ${impactCls}">${impactLabel}</div>
-    </div>`;
-  }).join('');
-
-  // docs
-  const docHtml = app.docs.map(d => {
-    const icls = d.status==='ok'?'di-ok':d.status==='warn'?'di-warn':'di-miss';
-    const scls = d.status==='ok'?'ds-ok':d.status==='warn'?'ds-warn':'ds-miss';
-    const label = d.status==='ok'?'Received':d.status==='warn'?'Incomplete':'Missing';
-    const icon  = d.status==='ok'?'✓':d.status==='warn'?'⚠':'✗';
-    return `<div class="doc-row">
-      <div class="doc-icon ${icls}">${icon}</div>
-      <div class="doc-name">${d.name}</div>
-      <span class="doc-status ${scls}">${label}</span>
-      <span class="doc-note">${d.note}</span>
-    </div>`;
-  }).join('');
-
-  // timeline
-  const tlHtml = app.timeline.map(t => `
-    <div class="tl-item">
-      <div class="tl-dot" style="background:${t.color}"></div>
-      <div class="tl-body"><strong>${t.text}</strong><p>${t.sub}</p></div>
-      <div class="tl-time">${t.time}</div>
-    </div>`).join('');
-
-  // missing docs warning
-  const missingDocs = app.docs.filter(d => d.status !== 'ok');
-  const docsWarning = missingDocs.length ? `
-    <div class="flag-item flag-docs-item" style="margin-bottom:4px">
-      <div class="flag-icon">⚠</div>
-      <div class="flag-content">
-        <div class="flag-title">${missingDocs.length} document issue${missingDocs.length>1?'s':''}</div>
-        <div class="flag-desc">${missingDocs.map(d=>d.name).join(', ')}</div>
-      </div>
-    </div>` : '';
-
-  document.getElementById('main-body').innerHTML = `
-    <div class="card">
-      <div class="card-title">Applicant Data <span class="ct-badge">${app.type}</span></div>
-      <div class="data-grid">${gridHtml}</div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">AI Score Factors <span class="ct-badge">SHAP contribution</span></div>
-      <div style="display:flex;align-items:center;gap:6px;margin-bottom:14px;padding:0 2px;">
-        <span style="font-size:11px;color:var(--muted)">Impact key:</span>
-        <span style="font-size:11px;color:var(--green)">■ positive</span>
-        <span style="font-size:11px;color:var(--red)">■ negative</span>
-        <span style="font-size:10px;font-family:'IBM Plex Mono',monospace;color:var(--muted);margin-left:auto">Score: ${app.score}/100</span>
-      </div>
-      ${factorHtml}
-    </div>
-
-    <div class="card">
-      <div class="card-title">Document Checklist ${docsWarning?'<span class="ct-badge" style="background:var(--amber-bg);color:var(--amber)">Action needed</span>':''}</div>
-      ${docsWarning}
-      ${docHtml}
-    </div>
-
-    <div class="card">
-      <div class="card-title">Underwriter Notes</div>
-      <textarea class="notes-area" placeholder="Add your review notes here…" id="uw-notes"></textarea>
-    </div>
-
-    <div class="card">
-      <div class="card-title">Application Timeline</div>
-      ${tlHtml}
-    </div>
+  document.getElementById('topbar-title').textContent = app.company;
+  document.getElementById('topbar-sub').textContent = `${app.id} · ${app.loanType} · Requested ${app.requested||'—'}`;
+  document.getElementById('topbar-actions').innerHTML = `
+    <button class="btn btn-outline" onclick="showNewAppModal()">＋ New Application</button>
   `;
 
-  // animate factor bars
-  setTimeout(() => {
-    document.querySelectorAll('.factor-fill').forEach(el => {
-      const w = el.style.width;
-      el.style.width = '0';
-      setTimeout(() => { el.style.width = w; }, 50);
-    });
-  }, 30);
-}
+  const content = document.getElementById('content');
 
-/* ─── AI PANEL ─────────────────────────────────────── */
-function renderAiPanel(app) {
-  const vCls = app.aiVerdict==='approve'?'vb-approve':app.aiVerdict==='refer'?'vb-refer':'vb-decline';
-  const vLabel = app.aiVerdict==='approve'?'RECOMMEND APPROVE':app.aiVerdict==='refer'?'REFER FOR REVIEW':'RECOMMEND DECLINE';
-  const vColor = app.aiVerdict==='approve'?'var(--green)':app.aiVerdict==='refer'?'var(--amber)':'var(--red)';
-
-  const circ = 2 * Math.PI * 24;
-  const offset = circ - (app.score / 100) * circ;
-
-  // SHAP bars
-  const shapHtml = app.factors.map(f => {
-    const absImpact = parseFloat(f.impact.replace('+','').replace('-',''));
-    const pct = Math.min(100, (absImpact / 20) * 100);
-    const barColor = f.dir==='pos'?'var(--green)':f.dir==='neg'?'var(--red)':'var(--muted)';
-    return `<div class="shap-row">
-      <div class="shap-label">${f.label}</div>
-      <div class="shap-bar-track"><div class="shap-bar-fill" style="width:${pct}%;background:${barColor}"></div></div>
-      <div class="shap-val" style="color:${barColor}">${f.impact}</div>
-    </div>`;
-  }).join('');
-
-  // flags
-  let flagsHtml = '';
-  if (app.flags.includes('fraud')) {
-    flagsHtml += `<div class="flag-item flag-fraud-item">
-      <div class="flag-icon">🚨</div>
-      <div class="flag-content">
-        <div class="flag-title">Fraud Signal Detected</div>
-        <div class="flag-desc">Asset supplier on quote cannot be verified against known Irish suppliers. Manual validation required before approval.</div>
-      </div>
-    </div>`;
-  }
-  if (app.flags.includes('docs')) {
-    flagsHtml += `<div class="flag-item flag-docs-item">
-      <div class="flag-icon">📄</div>
-      <div class="flag-content">
-        <div class="flag-title">Incomplete Documentation</div>
-        <div class="flag-desc">Employment letter and full 6-month bank statements not received. Condition approval recommended.</div>
-      </div>
-    </div>`;
-  }
-  if (!flagsHtml) {
-    flagsHtml = `<div class="flag-item flag-info-item">
-      <div class="flag-icon">✓</div>
-      <div class="flag-content">
-        <div class="flag-title">No Flags Raised</div>
-        <div class="flag-desc">AI found no fraud signals or document exceptions on this application.</div>
-      </div>
-    </div>`;
-  }
-
-  // suggested terms
-  let termsHtml = '';
-  if (app.suggestedRate) {
-    const monthly = Math.round(app.amount * (parseFloat(app.suggestedRate)/100/12) / (1 - Math.pow(1 + parseFloat(app.suggestedRate)/100/12, -app.suggestedTerm)));
-    termsHtml = `
-      <div class="ai-section-title">Suggested Loan Terms</div>
-      <div class="terms-grid">
-        <div class="term-chip"><div class="term-chip-label">Rate (APR)</div><div class="term-chip-val">${app.suggestedRate}%</div></div>
-        <div class="term-chip"><div class="term-chip-label">Term</div><div class="term-chip-val">${app.suggestedTerm} mo</div></div>
-        <div class="term-chip"><div class="term-chip-label">Monthly Pmt</div><div class="term-chip-val">€${monthly.toLocaleString('en-IE')}</div></div>
-        <div class="term-chip"><div class="term-chip-label">Amount</div><div class="term-chip-val">€${app.amount.toLocaleString('en-IE')}</div></div>
-      </div>`;
-  } else {
-    termsHtml = `<div class="ai-section-title">Suggested Loan Terms</div>
-      <div class="flag-item flag-fraud-item"><div class="flag-icon">—</div>
-      <div class="flag-content"><div class="flag-title">No offer generated</div><div class="flag-desc">Application does not meet minimum criteria for a loan offer.</div></div></div>`;
-  }
-
-  document.getElementById('ai-body').innerHTML = `
-    <div class="verdict-block ${vCls}">
-      <div class="verdict-top">
-        <div class="verdict-label" style="color:${vColor}">${vLabel}</div>
-        <div class="verdict-conf">${app.confidence}% conf.</div>
-      </div>
-      <div class="score-row">
-        <div class="donut-wrap">
-          <svg class="donut-svg" viewBox="0 0 60 60">
-            <circle class="donut-bg" cx="30" cy="30" r="24"/>
-            <circle class="donut-arc" cx="30" cy="30" r="24"
-              stroke="${vColor}"
-              stroke-dasharray="${circ}"
-              stroke-dashoffset="${circ}"
-              id="ai-arc"/>
-          </svg>
-          <div class="donut-inner">
-            <div class="donut-num" id="ai-score-num">0</div>
-            <div class="donut-sub">SCORE</div>
-          </div>
-        </div>
-        <div class="score-breakdown">
-          <div class="sb-row"><span class="sb-label">Policy band</span><span class="sb-val">${app.score>=62?'Approve':app.score>=42?'Borderline':'Decline'}</span></div>
-          <div class="sb-row"><span class="sb-label">Min threshold</span><span class="sb-val">62 / 100</span></div>
-          <div class="sb-row"><span class="sb-label">Model version</span><span class="sb-val">v3.1.4</span></div>
-          <div class="sb-row"><span class="sb-label">Processing time</span><span class="sb-val">1.8s</span></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="ai-section-title">AI Reasoning</div>
-    <div class="reasoning-block">${app.reasoning}</div>
-
-    <div class="ai-section-title">SHAP Feature Impact</div>
-    ${shapHtml}
-
-    <div class="ai-section-title">Flags & Alerts</div>
-    ${flagsHtml}
-
-    ${termsHtml}
-
-    <div style="margin-top:14px;padding:10px 12px;background:var(--canvas);border-radius:var(--r);border:1px solid var(--border2)">
-      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:3px">CPC COMPLIANCE NOTE</div>
-      <div style="font-size:11px;color:var(--muted);line-height:1.5">${
-        app.aiVerdict==='decline'
-        ? 'Consumer Protection Code §9 adverse notice required. AI decision logged to audit trail ref: ' + app.id + '-AUD.'
-        : app.aiVerdict==='refer'
-        ? 'Decision deferred to senior underwriter. Full rationale logged to audit trail ref: ' + app.id + '-AUD.'
-        : 'Decision rationale logged to audit trail ref: ' + app.id + '-AUD. Offer letter template ready.'
-      }</div>
-    </div>
-  `;
-
-  // animate donut
-  setTimeout(() => {
-    document.getElementById('ai-arc').style.strokeDashoffset = offset;
-    animCount('ai-score-num', 0, app.score, 900);
-  }, 80);
-}
-
-/* ─── MODAL ─────────────────────────────────────────── */
-function openModal(type) {
-  if (!activeId) return;
-  const app = APPS.find(a => a.id === activeId);
-  pendingDecision = type;
-
-  const cfg = {
-    approve: { icon: '✅', title: 'Approve Application', sub: `Approve €${app.amount.toLocaleString('en-IE')} for ${app.name}`, btnCls: 'btn-approve', btnLabel: 'Confirm Approval' },
-    refer:   { icon: '🔍', title: 'Refer for Senior Review', sub: `Send ${app.name} to senior underwriter queue`, btnCls: 'btn-refer', btnLabel: 'Send to Senior Review' },
-    decline: { icon: '⛔', title: 'Decline Application', sub: `Decline ${app.name} — CPC adverse notice will be generated`, btnCls: 'btn-decline', btnLabel: 'Confirm Decline' },
-  }[type];
-
-  document.getElementById('modal-title').textContent = cfg.title;
-  document.getElementById('modal-body').innerHTML = `
-    <div class="modal-dec-icon">${cfg.icon}</div>
-    <div class="modal-dec-title">${cfg.title}</div>
-    <div class="modal-dec-sub">${cfg.sub}</div>
-    <div class="modal-field">
-      <div class="modal-label">Underwriter Rationale</div>
-      <textarea class="modal-textarea" id="modal-reason" placeholder="Required: summarise your decision rationale for the audit log…"></textarea>
-    </div>
-    ${type==='approve'?`
-    <div class="modal-field">
-      <div class="modal-label">Approved Rate (APR %)</div>
-      <input class="modal-input" type="number" value="${app.suggestedRate||''}" id="modal-rate" placeholder="e.g. 6.9"/>
-    </div>`:''}
-  `;
-
-  const btn = document.getElementById('modal-confirm');
-  btn.className = 'btn ' + cfg.btnCls;
-  btn.textContent = cfg.btnLabel;
-  document.getElementById('modal-overlay').classList.add('show');
-}
-
-function closeModal() {
-  document.getElementById('modal-overlay').classList.remove('show');
-  pendingDecision = null;
-}
-
-function confirmDecision() {
-  const reason = document.getElementById('modal-reason')?.value?.trim();
-  if (!reason) {
-    document.getElementById('modal-reason').style.borderColor = 'var(--red)';
+  if (app.status === 'processing') {
+    renderProcessing(app, content);
     return;
   }
-  closeModal();
 
-  const app = APPS.find(a => a.id === activeId);
+  renderFullApp(app, content);
+}
+
+// ── Render processing ─────────────────────────────────────────────────────
+function renderProcessing(app, container) {
+  processingStep = 0;
+  container.innerHTML = `
+    <div style="flex:1;overflow-y:auto;padding:24px">
+      <div style="display:flex;gap:14px;margin-bottom:20px">
+        <div class="card" style="flex:1">
+          <div class="card-title">Company</div>
+          <div style="font-family:var(--font-head);font-size:18px;font-weight:700">${app.company}</div>
+          <div class="chip chip-teal" style="display:inline-block;margin-top:6px">${app.sector}</div>
+        </div>
+        <div class="card" style="flex:1">
+          <div class="card-title">Loan Requested</div>
+          <div class="card-value teal">${app.amount}</div>
+          <div class="card-sub">${app.loanType}</div>
+        </div>
+        <div class="card" style="flex:2">
+          <div class="card-title">Assessment Status</div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+            <div class="tag tag-processing"><span class="status-dot dot-teal" style="width:7px;height:7px"></span> Automated Assessment Running</div>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" id="proc-bar" style="width:5%"></div></div>
+        </div>
+      </div>
+
+      <div class="processing-panel">
+        <div class="spinner"></div>
+        <div style="font-family:var(--font-head);font-size:18px;font-weight:700;color:var(--teal)" id="proc-headline">Initialising assessment…</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px">FinPal is automatically processing this application</div>
+        <div class="step-list" id="proc-steps"></div>
+      </div>
+    </div>`;
+
+  runProcessingAnimation(app);
+}
+
+function runProcessingAnimation(app) {
+  clearInterval(processingTimer);
+  const stepsEl = document.getElementById('proc-steps');
+  const headline = document.getElementById('proc-headline');
+  const bar = document.getElementById('proc-bar');
+
+  processingTimer = setInterval(() => {
+    processingStep++;
+    const pct = Math.min(95, Math.round((processingStep / processingSteps.length) * 100));
+
+    if (bar) bar.style.width = pct + '%';
+    if (headline) headline.textContent = processingSteps[processingStep - 1] || 'Finalising…';
+
+    if (stepsEl) {
+      const html = processingSteps.slice(0, processingStep).map((s, i) =>
+        `<div class="step-item done"><span class="step-icon step-check">✓</span>${s}</div>`
+      ).join('');
+      stepsEl.innerHTML = html;
+      stepsEl.scrollTop = stepsEl.scrollHeight;
+    }
+
+    if (processingStep >= processingSteps.length) {
+      clearInterval(processingTimer);
+      // Promote to complete
+      app.status = 'complete';
+      app.dscr = 1.65;
+      app.revenue = '€3.2M';
+      app.revenueActual = '€3.18M';
+      app.cashflow = '€210K';
+      app.discrepancy = false;
+      app.requested = '19 Feb 2025';
+      app.narrative = `<strong>Clancy Logistics DAC</strong> is an established transport and logistics operator based in Athlone with 8 years of continuous trading. The assessment covers acquisition of additional HGV fleet assets via SBCI-backed asset finance.<br><br>Open banking analysis confirms <strong>consistent and growing revenue lodgements</strong> over the 24-month assessment window, with annualised actual revenue of <strong>€3.18M</strong> closely aligned with declared management accounts of €3.2M — a variance of only <strong>€20K (0.6%)</strong>, well within tolerance.<br><br>DSCR of <strong>1.65×</strong> on actual cash flows is comfortably above the 1.20× policy minimum. Free cash flow after all existing debt service is <strong>€210K per annum</strong>. AML screening clear on all directors. CRO filings current and accounts up to date. Tax clearance valid.`;
+      app.checks = [
+        { name: 'AML / PEP Screening', detail: 'Patrick Clancy (Director) — Clear. No PEP, sanction, or adverse media hits.', status: 'pass', time: '10:48:33' },
+        { name: 'CRO Company History', detail: 'Incorporated 14 Mar 2017. Status: Normal. Latest accounts filed 31 Oct 2024. No adverse history.', status: 'pass', time: '10:48:35' },
+        { name: 'Tax Clearance (ROS)', detail: 'Clearance certificate valid. All tax headings current.', status: 'pass', time: '10:48:36' },
+        { name: 'Revenue Reconciliation', detail: 'Declared €3.2M vs actual lodgements €3.18M. Variance €20K (0.6%). Within tolerance.', status: 'pass', time: '10:48:38' },
+        { name: 'Credit Policy — DSCR', detail: 'DSCR 1.65× exceeds 1.20× policy minimum. Application meets credit policy.', status: 'pass', time: '10:48:40' },
+      ];
+      app.transactions = [
+        { date: 'Jan 25', desc: 'LODGE - DPD CONTRACT', category: 'Revenue', amount: '+€94,300' },
+        { date: 'Jan 25', desc: 'LODGE - AMAZON FREIGHT', category: 'Revenue', amount: '+€68,200' },
+        { date: 'Jan 25', desc: 'DWT PAYROLL', category: 'Payroll', amount: '-€38,400' },
+        { date: 'Jan 25', desc: 'AIB LEASE REPAYMENT', category: 'Debt Service', amount: '-€11,200' },
+        { date: 'Dec 24', desc: 'LODGE - DPD CONTRACT', category: 'Revenue', amount: '+€91,800' },
+        { date: 'Dec 24', desc: 'DWT PAYROLL', category: 'Payroll', amount: '-€38,400' },
+        { date: 'Nov 24', desc: 'LODGE - AMAZON FREIGHT', category: 'Revenue', amount: '+€72,100' },
+      ];
+      app.bars = [62,70,75,80,72,85,78,88,82,90,86,95];
+
+      renderAppList();
+      setTimeout(() => {
+        if (currentAppId === app.id) {
+          renderFullApp(app, document.getElementById('content'));
+          showToast('✓ Assessment complete — evidence pack ready');
+        }
+      }, 800);
+    }
+  }, 900);
+}
+
+// ── Render full application ───────────────────────────────────────────────
+function renderFullApp(app, container) {
+  const statusChip = {
+    complete: '<span class="tag tag-complete">✓ Assessment Complete</span>',
+    flagged:  '<span class="tag tag-flagged">⚑ Flagged — Review Required</span>',
+    decided:  `<span class="tag ${app.decision==='approved'?'tag-complete':'tag-flagged'}">${app.decision==='approved'?'✓ Approved':'✗ Declined'}</span>`,
+  }[app.status] || '';
+
+  const tabAlert = app.discrepancy ? ' tab-alert' : '';
+  const dscrColor = app.dscr >= 1.2 ? 'teal' : 'red';
+  const dscrLabel = app.dscr >= 1.2 ? '✓ Above Policy Min 1.20×' : '✗ Below Policy Min 1.20×';
+
+  container.innerHTML = `
+    <div id="app-header">
+      <div class="app-meta-row">
+        <div style="flex:1">
+          <div class="app-company">${app.company}</div>
+          <div class="app-ref">${app.id} · ${app.crn} · ${app.sector}</div>
+          <div class="meta-chips" style="margin-top:8px">
+            ${statusChip}
+            <span class="chip chip-teal">${app.loanType}</span>
+            <span class="chip">${app.amount} requested</span>
+            <span class="chip">Submitted ${app.requested||'—'}</span>
+          </div>
+        </div>
+        ${app.status !== 'decided' ? `
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-outline" onclick="exportPack('${app.id}')">↓ Export Pack</button>
+          ${app.status==='complete'||app.status==='flagged'?`<button class="btn btn-primary" onclick="openDecisionModal('${app.id}')">Make Decision →</button>`:''}
+        </div>` : ''}
+      </div>
+      <div class="tabs">
+        <div class="tab active" data-tab="overview">Overview</div>
+        <div class="tab" data-tab="banking">Open Banking</div>
+        <div class="tab${tabAlert}" data-tab="checks">Compliance Checks</div>
+        <div class="tab" data-tab="evidence">Evidence Pack</div>
+        <div class="tab" data-tab="audit-log">Audit Log</div>
+      </div>
+    </div>
+
+    <div style="flex:1;overflow:hidden;position:relative">
+      <!-- OVERVIEW -->
+      <div class="panel active" id="tab-overview">
+        <div class="grid-4" style="margin-bottom:14px">
+          <div class="card">
+            <div class="card-title">DSCR</div>
+            <div class="card-value ${dscrColor}">${app.dscr}×</div>
+            <div class="card-sub">${dscrLabel}</div>
+          </div>
+          <div class="card">
+            <div class="card-title">Declared Revenue</div>
+            <div class="card-value">${app.revenue||'—'}</div>
+            <div class="card-sub">From management accounts</div>
+          </div>
+          <div class="card">
+            <div class="card-title">Actual Lodgements</div>
+            <div class="card-value ${app.discrepancy?'gold':'teal'}">${app.revenueActual||'—'}</div>
+            <div class="card-sub">${app.discrepancy?'⚑ Variance detected':'✓ Reconciled'}</div>
+          </div>
+          <div class="card">
+            <div class="card-title">Free Cash Flow</div>
+            <div class="card-value teal">${app.cashflow||'—'}</div>
+            <div class="card-sub">After all debt service p.a.</div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div>
+            <div class="section-header"><div class="section-title">Submitted Documents</div></div>
+            ${['Management Accounts 2024','Management Accounts 2023','Tax Clearance Certificate','Director ID — Seán O\'Brien','Director ID — Marie O\'Brien','6 Months Bank Statements'].map((d,i)=>`
+            <div class="doc-item">
+              <div class="doc-icon">📄</div>
+              <div style="flex:1">
+                <div class="doc-name">${d}</div>
+                <div class="doc-meta">${['PDF','PDF','PDF','JPEG','JPEG','PDF'][i]} · ${['2.1MB','1.9MB','148KB','890KB','774KB','4.2MB'][i]}</div>
+              </div>
+              <div class="doc-status">
+                <span style="color:var(--teal);font-size:13px">✓</span>
+                <span style="color:var(--muted);font-size:11px;font-family:var(--font-mono)">Processed</span>
+              </div>
+            </div>`).join('')}
+          </div>
+
+          <div>
+            <div class="section-header"><div class="section-title">Monthly Revenue Trend</div></div>
+            <div class="card" style="padding-bottom:20px">
+              <div class="card-title">Open Banking Lodgements — 12 Months <span style="color:var(--teal)">${app.revenue||''}</span></div>
+              <div class="bar-chart" id="revenue-chart"></div>
+              <div style="display:flex;justify-content:space-between;margin-top:6px">
+                <span style="font-size:10px;color:var(--muted);font-family:var(--font-mono)">Mar 24</span>
+                <span style="font-size:10px;color:var(--muted);font-family:var(--font-mono)">Feb 25</span>
+              </div>
+            </div>
+
+            ${app.discrepancy ? `
+            <div class="flag-box" style="margin-top:12px">
+              <div class="flag-title">⚑ Revenue Discrepancy Detected</div>
+              <div class="flag-body">${app.discrepancyDetail}</div>
+            </div>` : `
+            <div class="flag-box green" style="margin-top:12px">
+              <div class="flag-title">✓ Revenue Reconciled</div>
+              <div class="flag-body">Declared revenue closely matches actual open banking lodgements. Variance within 2% tolerance.</div>
+            </div>`}
+
+            ${app.status === 'decided' ? `
+            <div class="decision-submitted" style="margin-top:12px">
+              <div class="decision-submitted-icon">${app.decision==='approved'?'✅':'❌'}</div>
+              <div>
+                <div class="decision-submitted-text">${app.decision==='approved'?'Application Approved':'Application Declined'}</div>
+                <div class="decision-submitted-sub">Decision recorded · Audit trail updated · 14 Feb 2025 15:42</div>
+              </div>
+            </div>` : ''}
+          </div>
+        </div>
+      </div>
+
+      <!-- BANKING -->
+      <div class="panel" id="tab-banking">
+        <div class="grid-3" style="margin-bottom:16px">
+          <div class="card">
+            <div class="card-title">Bank Account</div>
+            <div style="font-size:15px;font-weight:600">AIB Business Current</div>
+            <div class="card-sub" style="font-family:var(--font-mono)">****4821 · Dublin</div>
+          </div>
+          <div class="card">
+            <div class="card-title">Analysis Period</div>
+            <div style="font-size:15px;font-weight:600">24 Months</div>
+            <div class="card-sub">Feb 2023 — Feb 2025</div>
+          </div>
+          <div class="card">
+            <div class="card-title">Avg Monthly Revenue</div>
+            <div class="card-value teal" style="font-size:22px">${app.revenueActual ? '€' + (parseFloat(app.revenueActual.replace(/[€M]/g,''))*1000/12).toFixed(0)+'K' : '—'}</div>
+            <div class="card-sub">From actual lodgements</div>
+          </div>
+        </div>
+
+        <div class="section-header"><div class="section-title">Recent Transactions</div></div>
+        <div class="card" style="padding:0;overflow:hidden">
+          <table class="tx-table">
+            <thead><tr>
+              <th>Date</th><th>Description</th><th>Category</th><th style="text-align:right">Amount</th>
+            </tr></thead>
+            <tbody>
+              ${(app.transactions||[]).map(t=>`
+              <tr>
+                <td style="font-family:var(--font-mono);color:var(--muted)">${t.date}</td>
+                <td>${t.desc}</td>
+                <td><span class="tx-cat">${t.category}</span></td>
+                <td style="text-align:right" class="${t.amount.startsWith('+')?'amount-in':'amount-out'}">${t.amount}</td>
+              </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="section-header" style="margin-top:20px"><div class="section-title">Calculated Financial Metrics</div></div>
+        <div class="grid-2">
+          <div class="card">
+            ${[
+              ['Average Monthly Revenue', app.revenueActual ? '€' + (parseFloat(app.revenueActual.replace(/[€M]/g,''))*1000/12).toFixed(0)+'K' : '—'],
+              ['Annualised Actual Revenue', app.revenueActual||'—'],
+              ['Total Monthly Outgoings (est.)', '—'],
+              ['Monthly Debt Service', '€12,800'],
+            ].map(([l,v])=>`<div class="metric-row"><span class="metric-label">${l}</span><span class="metric-value">${v}</span></div>`).join('')}
+          </div>
+          <div class="card">
+            ${[
+              ['DSCR (Actual Cash Flow)', app.dscr ? app.dscr+'×' : '—'],
+              ['Policy Minimum DSCR', '1.20×'],
+              ['DSCR Status', app.dscr >= 1.2 ? '✓ Pass' : '✗ Fail'],
+              ['Free Cash Flow p.a.', app.cashflow||'—'],
+            ].map(([l,v])=>`<div class="metric-row"><span class="metric-label">${l}</span><span class="metric-value" style="color:${l.includes('Status')?(app.dscr>=1.2?'var(--green)':'var(--red)'):'var(--white)'}">${v}</span></div>`).join('')}
+          </div>
+        </div>
+      </div>
+
+      <!-- CHECKS -->
+      <div class="panel" id="tab-checks">
+        <div class="section-header"><div class="section-title">Automated Compliance Checks</div></div>
+        <div style="margin-bottom:16px">
+          ${(app.checks||[]).map(c=>{
+            const icon = {pass:'✅', warn:'⚠️', fail:'❌'}[c.status];
+            const borderColor = {pass:'rgba(46,204,113,.2)', warn:'rgba(245,166,35,.2)', fail:'rgba(232,76,76,.25)'}[c.status];
+            return `<div class="check-item" style="border-color:${borderColor}">
+              <div class="check-status-icon">${icon}</div>
+              <div style="flex:1">
+                <div class="check-name">${c.name}</div>
+                <div class="check-detail">${c.detail}</div>
+              </div>
+              <div class="check-timestamp">${c.time}</div>
+            </div>`;
+          }).join('')}
+        </div>
+
+        <div class="flag-box" style="margin-top:4px">
+          <div class="flag-title">ℹ EU AI Act Compliance Note</div>
+          <div class="flag-body">All checks above are rules-based and fully traceable. No automated credit scoring is performed. FinPal presents evidence — your underwriter makes every decision. This architecture is designed for compliance with EU AI Act 2024/1689 and CBI outsourcing guidance 2021.</div>
+        </div>
+      </div>
+
+      <!-- EVIDENCE PACK -->
+      <div class="panel" id="tab-evidence">
+        <div class="evidence-header">
+          <div style="font-size:11px;color:var(--teal);font-family:var(--font-mono);margin-bottom:6px;letter-spacing:.5px">CREDIT EVIDENCE PACK</div>
+          <div class="evidence-company">${app.company}</div>
+          <div class="evidence-meta">
+            <div class="evidence-meta-item"><div class="evidence-meta-label">Reference</div><div class="evidence-meta-value">${app.id}</div></div>
+            <div class="evidence-meta-item"><div class="evidence-meta-label">Amount</div><div class="evidence-meta-value">${app.amount}</div></div>
+            <div class="evidence-meta-item"><div class="evidence-meta-label">Product</div><div class="evidence-meta-value">${app.loanType}</div></div>
+            <div class="evidence-meta-item"><div class="evidence-meta-label">Generated</div><div class="evidence-meta-value">${new Date().toLocaleDateString('en-IE')}</div></div>
+            <div class="evidence-meta-item"><div class="evidence-meta-label">Status</div><div class="evidence-meta-value" style="color:var(--teal)">Awaiting Decision</div></div>
+          </div>
+        </div>
+
+        ${app.narrative ? `
+        <div class="narrative-box">
+          <div class="narrative-text">${app.narrative}</div>
+        </div>` : ''}
+
+        <div class="grid-2" style="margin-bottom:14px">
+          <div class="card">
+            <div class="card-title">Key Financial Findings</div>
+            ${[
+              ['Declared Revenue', app.revenue||'—', ''],
+              ['Actual Revenue (Open Banking)', app.revenueActual||'—', app.discrepancy?'flag-amber':'flag-green'],
+              ['Revenue Variance', app.discrepancy?'⚑ >5%':'✓ <2%', app.discrepancy?'flag-amber':'flag-green'],
+              ['DSCR', app.dscr ? app.dscr+'×' : '—', app.dscr>=1.2?'flag-green':'flag-red'],
+              ['Free Cash Flow p.a.', app.cashflow||'—', ''],
+              ['Policy Gate', app.dscr>=1.2?'✓ Pass':'✗ Fail', app.dscr>=1.2?'flag-green':'flag-red'],
+            ].map(([l,v,f])=>`
+            <div class="finding-row">
+              <div class="finding-label">${l}</div>
+              <div class="finding-value">${v}${f?`<span class="finding-flag ${f}">${f.includes('green')?'Pass':f.includes('red')?'Fail':'Review'}</span>`:''}</div>
+            </div>`).join('')}
+          </div>
+          <div class="card">
+            <div class="card-title">Compliance Summary</div>
+            ${(app.checks||[]).map(c=>
+              `<div class="finding-row">
+                <div class="finding-label">${c.name}</div>
+                <div class="finding-value" style="color:${c.status==='pass'?'var(--green)':c.status==='warn'?'var(--gold)':'var(--red)'}">
+                  ${c.status==='pass'?'✓ Clear':c.status==='warn'?'⚑ Review':'✗ Fail'}
+                </div>
+              </div>`
+            ).join('')}
+          </div>
+        </div>
+
+        <div class="decision-gate">
+          <div class="decision-gate-title">
+            ⚖ Underwriter Decision Gate
+          </div>
+          <div class="decision-gate-sub">
+            FinPal has presented the evidence. The credit decision is yours. Under Ireland's Individual Accountability Framework, your decision and rationale will be permanently recorded.
+          </div>
+          ${app.status !== 'decided' ? `
+          <textarea class="decision-textarea" id="ev-rationale" placeholder="Enter your decision rationale here (mandatory — recorded to immutable audit trail)…"></textarea>
+          <div class="decision-buttons">
+            <button class="btn btn-danger" onclick="openDecisionModal('${app.id}','decline')">✗ Decline Application</button>
+            <button class="btn btn-primary" onclick="openDecisionModal('${app.id}','approve')">✓ Approve Application</button>
+          </div>` : `
+          <div class="decision-submitted">
+            <div class="decision-submitted-icon">${app.decision==='approved'?'✅':'❌'}</div>
+            <div>
+              <div class="decision-submitted-text">Decision ${app.decision==='approved'?'Approved':'Declined'} — Logged to Audit Trail</div>
+              <div class="decision-submitted-sub">Decision recorded · CBI-inspection-ready · ${new Date().toLocaleString('en-IE')}</div>
+            </div>
+          </div>`}
+        </div>
+      </div>
+
+      <!-- AUDIT LOG -->
+      <div class="panel" id="tab-audit-log">
+        <div class="section-header">
+          <div class="section-title">Immutable Audit Trail</div>
+          <span class="tag tag-complete">CBI-Inspection Ready</span>
+        </div>
+        <div class="flag-box green" style="margin-bottom:16px">
+          <div class="flag-title">✓ IAF Compliance</div>
+          <div class="flag-body">This audit trail is cryptographically immutable and cannot be modified or deleted. Every entry is timestamped and attributed. This log is your personal protection under Ireland's Individual Accountability Framework.</div>
+        </div>
+
+        <div class="card" style="padding:4px 16px">
+          ${generateAuditLog(app)}
+        </div>
+      </div>
+
+    </div> <!-- /tab panels wrapper -->
+  `;
+
+  // Draw bar chart
+  setTimeout(() => {
+    const chartEl = document.getElementById('revenue-chart');
+    if (chartEl && app.bars && app.bars.length) {
+      const months = ['M','A','M','J','J','A','S','O','N','D','J','F'];
+      const max = Math.max(...app.bars);
+      chartEl.innerHTML = app.bars.map((v, i) => {
+        const h = Math.round((v / max) * 100);
+        const color = v === max ? 'var(--teal)' : 'var(--navy-mid)';
+        return `<div class="bar-col">
+          <div class="bar-fill" style="height:${h}%;background:${color}"></div>
+          <div class="bar-label">${months[i]}</div>
+        </div>`;
+      }).join('');
+    }
+  }, 50);
+
+  // Tab switching
+  container.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      container.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      container.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      const panelId = 'tab-' + tab.dataset.tab;
+      const panel = container.querySelector('#' + panelId);
+      if (panel) panel.classList.add('active');
+    });
+  });
+}
+
+function generateAuditLog(app) {
+  const entries = [
+    { time: '14:22:05', dot: '', event: 'Application received', detail: `${app.id} · ${app.company} · ${app.loanType} · ${app.amount}` },
+    { time: '14:22:06', dot: '', event: 'Open banking consent obtained', detail: `SME authorised read access via Yapily AISP · AIB ****4821` },
+    { time: '14:22:07', dot: '', event: 'Documents ingested', detail: `6 documents · OCR extraction complete · Azure Document Intelligence EU` },
+    { time: '14:22:09', dot: '', event: 'Transaction history pulled', detail: `284 transactions · 24 months · €0 to present` },
+    { time: '14:22:13', dot: 'gold', event: 'Revenue discrepancy flagged', detail: `Declared vs actual variance logged for underwriter review` },
+    { time: '14:22:15', dot: '', event: 'AML / PEP screening complete', detail: `All directors clear · Acuris Risk Intelligence · Clean` },
+    { time: '14:22:17', dot: '', event: 'CRO check complete', detail: `Company status normal · Filings current` },
+    { time: '14:22:18', dot: '', event: 'Tax clearance verified', detail: `ROS confirmation · Valid · Expires 31 Dec 2025` },
+    { time: '14:22:20', dot: '', event: 'Credit policy applied', detail: `All policy rules evaluated · DSCR ${app.dscr}× vs 1.20× minimum` },
+    { time: '14:22:22', dot: '', event: 'Evidence pack generated', detail: `PDF credit memo prepared · All source data referenced` },
+    { time: '14:22:23', dot: '', event: 'Assessment complete — awaiting underwriter decision', detail: `Processing time: 18 seconds` },
+  ];
+  if (app.status === 'decided') {
+    entries.push({ time: '15:42:01', dot: app.decision==='approved'?'green':'red', event: `Credit decision: ${app.decision}`, detail: `Underwriter: M. Walsh · Rationale documented · Audit record sealed` });
+  }
+  return entries.map(e => `
+    <div class="audit-item">
+      <div class="audit-time">${e.time}</div>
+      <div class="audit-dot ${e.dot}"></div>
+      <div>
+        <div class="audit-event">${e.event}</div>
+        <div class="audit-detail">${e.detail}</div>
+      </div>
+    </div>`).join('');
+}
+
+// ── Decision modal ────────────────────────────────────────────────────────
+let pendingDecision = { id: null, type: null };
+
+function openDecisionModal(id, type) {
+  pendingDecision = { id, type };
+  const app = APPS.find(a => a.id === id);
+  const modal = document.getElementById('decision-modal');
+  document.getElementById('dm-title').textContent = type === 'approve' ? 'Approve Application' : type === 'decline' ? 'Decline Application' : 'Submit Credit Decision';
+  document.getElementById('dm-approve-btn').style.display = type === 'decline' ? 'none' : '';
+  document.getElementById('dm-decline-btn').style.display = type === 'approve' ? 'none' : '';
+  document.getElementById('dm-rationale').value = '';
+  modal.classList.add('open');
+}
+
+function closeDecisionModal() {
+  document.getElementById('decision-modal').classList.remove('open');
+}
+
+function submitDecision(type) {
+  const rationale = document.getElementById('dm-rationale').value.trim();
+  if (!rationale) {
+    document.getElementById('dm-rationale').style.borderColor = 'var(--red)';
+    document.getElementById('dm-rationale').placeholder = 'Rationale is mandatory under IAF requirements';
+    return;
+  }
+  closeDecisionModal();
+  const app = APPS.find(a => a.id === pendingDecision.id || a.id === currentAppId);
   if (app) {
-    app.status = pendingDecision === 'refer' ? 'refer' : pendingDecision;
-    // remove from view
-    const idx = APPS.findIndex(a => a.id === activeId);
-    APPS.splice(idx, 1);
-    activeId = null;
-    renderQueue();
-    document.getElementById('app-view').style.display = 'none';
-    document.getElementById('empty-state').style.display = 'flex';
+    app.status = 'decided';
+    app.decision = type === 'approve' ? 'approved' : 'declined';
+    renderAppList();
+    renderFullApp(app, document.getElementById('content'));
+    showToast(type === 'approve' ? '✓ Application approved — decision logged' : '✗ Application declined — decision logged');
   }
-
-  const labels = { approve:'✅ Application approved and logged.', refer:'↗ Referred to senior underwriter.', decline:'⛔ Application declined. CPC notice queued.' };
-  showToast(labels[pendingDecision]);
 }
 
-/* ─── HELPERS ─────────────────────────────────────────── */
-function animCount(id, from, to, dur) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  const start = performance.now();
-  function step(now) {
-    const p = Math.min(1, (now-start)/dur);
-    const e = 1 - Math.pow(1-p, 3);
-    el.textContent = Math.round(from + (to-from)*e);
-    if (p < 1) requestAnimationFrame(step);
-  }
-  requestAnimationFrame(step);
+// ── New app modal ─────────────────────────────────────────────────────────
+function showNewAppModal() {
+  document.getElementById('new-app-modal').classList.add('open');
 }
 
+function submitNewApp() {
+  const company = document.getElementById('new-company').value.trim();
+  const amount = document.getElementById('new-amount').value.trim();
+  const type = document.getElementById('new-type').value;
+  if (!company || !amount || !type) return;
+
+  const newId = 'FP-2025-00' + (43 + APPS.filter(a=>a.status==='processing').length);
+  APPS.unshift({
+    id: newId,
+    company,
+    sector: 'General',
+    amount: amount.startsWith('€') ? amount : '€' + amount,
+    loanType: type,
+    crn: 'CRN pending',
+    requested: new Date().toLocaleDateString('en-IE', {day:'numeric',month:'short',year:'numeric'}),
+    status: 'processing',
+    dscr: null, revenue: null, discrepancy: false,
+    narrative: null, checks: [], transactions: [], bars: [],
+  });
+  document.getElementById('new-app-modal').classList.remove('open');
+  renderAppList();
+  loadApp(newId);
+  showToast('Assessment started for ' + company);
+}
+
+// ── Export ────────────────────────────────────────────────────────────────
+function exportPack(id) {
+  showToast('📄 Evidence pack export initiated…');
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────
 function showToast(msg) {
-  const t = document.getElementById('toast');
+  const existing = document.querySelector('.toast');
+  if (existing) existing.remove();
+  const t = document.createElement('div');
+  t.className = 'toast';
   t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3200);
+  document.body.appendChild(t);
+  setTimeout(() => { t.classList.add('hide'); setTimeout(() => t.remove(), 300); }, 3000);
 }
 
-/* ─── INIT ─────────────────────────────────────────────── */
-renderQueue();
-// auto-select first
-setTimeout(() => selectApp('FP-9041'), 200);
+// ── Init ──────────────────────────────────────────────────────────────────
+renderAppList();
+// Auto-load first app
+loadApp(APPS[0].id);
 </script>
 </body>
 </html>
